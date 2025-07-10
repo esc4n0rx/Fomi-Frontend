@@ -1,6 +1,7 @@
 import type React from "react"
 import "./globals.css"
 import { Inter } from "next/font/google"
+import { AuthProvider } from "@/contexts/AuthContext"
 
 /*
  * The Google-hosted stylesheet was failing to load in Next.js.
@@ -17,7 +18,7 @@ const inter = Inter({
 export const metadata = {
   title: "Fomi - Lojas de Lanches Online",
   description: "Crie sua loja de lanches com uma experiência moderna, fluida e animada.",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -27,7 +28,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className={inter.variable}>
-      <body className="font-sans bg-neutral-light text-neutral-dark">{children}</body>
+      <body className="font-sans bg-neutral-light text-neutral-dark">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   )
 }

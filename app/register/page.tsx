@@ -1,10 +1,10 @@
 "use client"
 
-import { AnimatedForm } from "@/components/animated-form"
+import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
-import { motion } from "framer-motion"
+import React, { useState } from "react"
+import { authApi } from "@/lib/api"
 
-// 1. Dividir os campos em steps
 const steps = [
   {
     title: "Dados Pessoais",
@@ -171,13 +171,40 @@ const steps = [
   },
 ]
 
-import React, { useState } from "react"
+// Função para calcular força da senha
+function getPasswordStrength(password: string) {
+  let score = 0
+  if (!password) return 0
+  if (password.length >= 8) score++
+  if (/[A-Z]/.test(password)) score++
+  if (/[a-z]/.test(password)) score++
+  if (/\d/.test(password)) score++
+  if (/[^A-Za-z0-9]/.test(password)) score++
+  return score
+}
+
+// Função para formatar CPF
+function formatCPF(value: string) {
+  const cpf = value.replace(/\D/g, "").slice(0, 11)
+  return cpf
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
+}
+
+// Função para formatar CEP
+function formatCEP(value: string) {
+  const cep = value.replace(/\D/g, "").slice(0, 8)
+  return cep.replace(/(\d{5})(\d{1,3})$/, "$1-$2")
+}
 
 export default function RegisterPage() {
   const [step, setStep] = useState(0)
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [errors, setErrors] = useState<Record<string, string | null>>({})
   const [loadingCep, setLoadingCep] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
   const currentStep = steps[step]
 
   const validateStep = () => {
@@ -192,6 +219,13 @@ export default function RegisterPage() {
   }
 
   const handleChange = async (name: string, value: string) => {
+    // Formatação automática de CPF e CEP
+    if (name === "cpf") {
+      value = formatCPF(value)
+    }
+    if (name === "cep") {
+      value = formatCEP(value)
+    }
     setFormData((prev) => ({ ...prev, [name]: value }))
     setErrors((prev) => ({ ...prev, [name]: null }))
 
@@ -234,9 +268,41 @@ export default function RegisterPage() {
 
   const handleRegister = async () => {
     if (!validateStep()) return
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    window.location.href = "/dashboard"
+    setIsLoading(true)
+    setApiError(null)
+    try {
+      // Ajuste os nomes dos campos conforme esperado pela API
+      const payload = {
+        username: formData.username,
+        nome: formData.name,
+        email: formData.email,
+        password: formData.password,
+        cpf: formData.cpf,
+        data_nascimento: formData.birthdate,
+        endereco_cep: formData.cep,
+        endereco_rua: formData.rua,
+        endereco_numero: formData.numero,
+        endereco_complemento: formData.complemento,
+        endereco_bairro: formData.bairro,
+        endereco_cidade: formData.cidade,
+        endereco_estado: formData.estado,
+        codigo_convite: formData.inviteCode,
+      }
+      await authApi.register(payload)
+      window.location.href = "/login"
+    } catch (error: any) {
+      if (error.errors) {
+        const apiErrors: Record<string, string | null> = {}
+        error.errors.forEach((err: any) => {
+          apiErrors[err.field] = String(err.message || 'Erro')
+        })
+        setErrors(apiErrors)
+      } else {
+        setApiError(error.message || 'Erro ao registrar')
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -257,6 +323,7 @@ export default function RegisterPage() {
         </motion.div>
         <div className="bg-white p-8 rounded-2xl shadow-xl">
           <h2 className="text-xl font-bold mb-4 text-center">{currentStep.title}</h2>
+          {apiError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{apiError}</div>}
           <form
             onSubmit={e => {
               e.preventDefault()
@@ -264,27 +331,42 @@ export default function RegisterPage() {
               else handleNext()
             }}
           >
-            {currentStep.fields.map(field => (
-              <div className="mb-4" key={field.name}>
-                <label className="block text-sm font-medium mb-1" htmlFor={field.name}>{field.label}</label>
-                <input
-                  id={field.name}
-                  name={field.name}
-                  type={field.type}
-                  placeholder={field.placeholder}
-                  value={formData[field.name] || ""}
-                  onChange={e => handleChange(field.name, e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 ${errors[field.name] ? 'border-red-500' : 'border-gray-300'}`}
-                />
-                {errors[field.name] && <span className="text-xs text-red-500">{errors[field.name]}</span>}
-              </div>
-            ))}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ duration: 0.4 }}
+              >
+                {currentStep.fields.map(field => (
+                  <div className="mb-4" key={field.name}>
+                    <label className="block text-sm font-medium mb-1" htmlFor={field.name}>{field.label}</label>
+                    <input
+                      id={field.name}
+                      name={field.name}
+                      type={field.type}
+                      placeholder={field.placeholder}
+                      value={formData[field.name] || ""}
+                      onChange={e => handleChange(field.name, e.target.value)}
+                      disabled={isLoading || (field.name === 'cep' && loadingCep)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 ${errors[field.name] ? 'border-red-500' : 'border-gray-300'}`}
+                    />
+                    {/* Barra de força da senha */}
+                    {field.name === 'password' && (
+                      <PasswordStrengthBar password={formData.password || ''} />
+                    )}
+                    {errors[field.name] && <span className="text-xs text-red-500">{errors[field.name]}</span>}
+                  </div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
             <div className="flex justify-between mt-6">
               {step > 0 && (
                 <button type="button" onClick={handleBack} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Voltar</button>
               )}
-              <button type="submit" className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/90 ml-auto">
-                {step === steps.length - 1 ? "Criar Conta" : "Próximo"}
+              <button type="submit" className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/90 ml-auto" disabled={isLoading}>
+                {isLoading ? 'Enviando...' : (step === steps.length - 1 ? "Criar Conta" : "Próximo")}
               </button>
             </div>
           </form>
@@ -303,6 +385,31 @@ export default function RegisterPage() {
           </motion.div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// Componente de barra de força de senha
+function PasswordStrengthBar({ password }: { password: string }) {
+  const strength = getPasswordStrength(password)
+  const levels = [
+    { color: 'bg-red-400', label: 'Muito fraca' },
+    { color: 'bg-orange-400', label: 'Fraca' },
+    { color: 'bg-yellow-400', label: 'Média' },
+    { color: 'bg-blue-400', label: 'Boa' },
+    { color: 'bg-green-500', label: 'Forte' },
+  ]
+  return (
+    <div className="mt-2">
+      <div className="w-full h-2 bg-gray-200 rounded">
+        <div
+          className={`h-2 rounded transition-all duration-300 ${levels[strength - 1]?.color || ''}`}
+          style={{ width: `${(strength / 5) * 100}%` }}
+        />
+      </div>
+      {password && (
+        <span className={`text-xs mt-1 block ${levels[strength - 1]?.color || 'text-gray-400'}`}>{levels[strength - 1]?.label || 'Muito fraca'}</span>
+      )}
     </div>
   )
 }
