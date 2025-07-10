@@ -11,7 +11,6 @@ import { AlertCircle, Loader2, Store, Palette, MapPin, Share2 } from "lucide-rea
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 
-// Tipo para o request de criação de loja
 interface CreateStoreRequest {
   nome: string
   descricao: string
@@ -104,11 +103,7 @@ export default function CreateStorePage() {
     setErrors({})
     
     try {
-      // O createStore do AuthContext não espera parâmetros
-      // A criação da loja é simplificada
       await createStore()
-      
-      // Redirecionar para a página de planos após criar a loja
       router.push("/plans")
     } catch (error: any) {
       console.error('Erro ao criar loja:', error)
