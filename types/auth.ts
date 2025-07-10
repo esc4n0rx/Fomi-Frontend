@@ -13,6 +13,42 @@ export interface User {
       estado: string;
     };
     created_at: string;
+    store?: Store;
+  }
+  
+  export interface Store {
+    id: string;
+    nome: string;
+    slug: string;
+    descricao?: string;
+    plano: string;
+    ativo: boolean;
+    configuracoes?: StoreSettings;
+    horario_funcionamento?: StoreWorkingHours;
+    created_at: string;
+  }
+  
+  export interface StoreSettings {
+    whatsapp?: string;
+    instagram?: string;
+    facebook?: string;
+    endereco_cep?: string;
+    endereco_rua?: string;
+    endereco_numero?: string;
+    endereco_complemento?: string;
+    endereco_bairro?: string;
+    endereco_cidade?: string;
+    endereco_estado?: string;
+    cor_primaria?: string;
+    cor_secundaria?: string;
+  }
+  
+  export interface StoreWorkingHours {
+    [day: string]: {
+      open: string;
+      close: string;
+      active: boolean;
+    };
   }
   
   export interface LoginRequest {
@@ -34,6 +70,23 @@ export interface User {
     endereco_estado: string;
     password: string;
     codigo_convite?: string;
+  }
+  
+  export interface CreateStoreRequest {
+    nome: string;
+    descricao?: string;
+    whatsapp?: string;
+    instagram?: string;
+    facebook?: string;
+    endereco_cep?: string;
+    endereco_rua?: string;
+    endereco_numero?: string;
+    endereco_complemento?: string;
+    endereco_bairro?: string;
+    endereco_cidade?: string;
+    endereco_estado?: string;
+    cor_primaria?: string;
+    cor_secundaria?: string;
   }
   
   export interface AuthResponse {

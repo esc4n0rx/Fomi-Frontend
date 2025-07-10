@@ -1,6 +1,7 @@
 "use client"
 
 import { SidebarMenu } from "@/components/sidebar-menu"
+import { BillingManagement } from "@/components/billing-management"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,7 +29,6 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Badge className="bg-purple-100 text-purple-800">Plano Supremo</Badge>
               <Button className="bg-primary hover:bg-primary/90">Salvar Alterações</Button>
             </div>
           </div>
@@ -171,37 +171,7 @@ export default function SettingsPage() {
                 <h2 className="text-xl font-semibold">Plano e Faturamento</h2>
               </div>
 
-              <div className="space-y-4">
-                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-purple-900">Plano Supremo</h3>
-                    <Badge className="bg-purple-100 text-purple-800">Ativo</Badge>
-                  </div>
-                  <p className="text-sm text-purple-700 mb-3">R$ 39,90/mês • Próxima cobrança em 15 dias</p>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
-                      Alterar Plano
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-red-600 bg-transparent">
-                      Cancelar
-                    </Button>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Método de Pagamento</h4>
-                  <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
-                    <CreditCard size={20} className="text-gray-400" />
-                    <div>
-                      <p className="font-medium">•••• •••• •••• 1234</p>
-                      <p className="text-sm text-gray-600">Expira em 12/2025</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="ml-auto bg-transparent">
-                      Alterar
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <BillingManagement />
             </motion.div>
           </div>
         </main>

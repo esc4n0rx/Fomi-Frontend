@@ -1,14 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Home, ShoppingBag, Users, Settings, ChevronLeft, Store, Package, CreditCard } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
+import { useBilling } from "@/hooks/useBilling"
 
 export function SidebarMenu() {
   const [isExpanded, setIsExpanded] = useState(true)
   const pathname = usePathname()
+  const { subscription, isLoading } = useBilling()
 
   const menuItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
@@ -21,6 +24,25 @@ export function SidebarMenu() {
     { icon: CreditCard, label: "Pagamentos", href: "/dashboard/payments" },
     { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
   ]
+
+  const getPlanInfo = () => {
+    if (isLoading) return { name: "Carregando...", color: "bg-gray-100 text-gray-800" };
+    
+    if (!subscription) {
+      return { name: "Plano Grátis", color: "bg-green-100 text-green-800" };
+    }
+
+    switch (subscription.plano) {
+      case 'fomi_duplo':
+        return { name: "Fomi Duplo", color: "bg-blue-100 text-blue-800" };
+      case 'fomi_supremo':
+        return { name: "Fomi Supremo", color: "bg-purple-100 text-purple-800" };
+      default:
+        return { name: "Plano Grátis", color: "bg-green-100 text-green-800" };
+    }
+  };
+
+  const planInfo = getPlanInfo();
 
   return (
     <motion.div
@@ -121,9 +143,12 @@ export function SidebarMenu() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
+                className="flex-1"
               >
                 <p className="font-medium text-gray-900">João Silva</p>
-                <p className="text-sm text-gray-500">Plano Supremo</p>
+                <Badge className={`text-xs ${planInfo.color}`}>
+                  {planInfo.name}
+                </Badge>
               </motion.div>
             )}
           </AnimatePresence>

@@ -31,8 +31,6 @@ export default function LoginPage() {
     
     if (!password) {
       newErrors.password = "Senha é obrigatória"
-    } else if (password.length < 6) {
-      newErrors.password = "Senha deve ter pelo menos 6 caracteres"
     }
     
     setErrors(newErrors)
@@ -52,16 +50,7 @@ export default function LoginPage() {
       router.push('/dashboard')
     } catch (error: any) {
       console.error('Login error:', error)
-      
-      if (error.errors) {
-        const newErrors: { email?: string; password?: string } = {}
-        error.errors.forEach((err: any) => {
-          newErrors[err.field as keyof typeof newErrors] = err.message
-        })
-        setErrors(newErrors)
-      } else {
-        setErrors({ general: error.message || 'Erro ao fazer login' })
-      }
+      setErrors({ general: error.message || 'Credenciais inválidas. Verifique seu email e senha.' })
     } finally {
       setIsLoading(false)
     }

@@ -1,4 +1,4 @@
-import { User } from '@/types/auth';
+import { User,Store} from '@/types/auth';
 
 export const authStorage = {
   setToken: (token: string) => {
@@ -40,10 +40,31 @@ export const authStorage = {
     }
   },
 
+  setStore: (store: Store) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('store_data', JSON.stringify(store));
+    }
+  },
+
+  getStore: (): Store | null => {
+    if (typeof window !== 'undefined') {
+      const storeData = localStorage.getItem('store_data');
+      return storeData ? JSON.parse(storeData) : null;
+    }
+    return null;
+  },
+
+  removeStore: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('store_data');
+    }
+  },
+
   clear: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_data');
+      localStorage.removeItem('store_data');
     }
   }
 };

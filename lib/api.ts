@@ -73,4 +73,25 @@ export const authApi = {
   }
 };
 
+// Funções da loja
+export const storeApi = {
+  async createStore(): Promise<{ success: boolean; data: any }> {
+    try {
+      const response = await api.post('/store/create');
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
+  },
+
+  async getStore(): Promise<{ success: boolean; data: any }> {
+    try {
+      const response = await api.get('/store');
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
+  }
+};
+
 export default api;
