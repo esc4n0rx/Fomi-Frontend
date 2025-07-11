@@ -60,8 +60,8 @@ const initialForm: CreateStoreRequest = {
   endereco_bairro: "",
   endereco_cidade: "",
   endereco_estado: "",
-  cor_primaria: "#1d4ed8",
-  cor_secundaria: "#f59e42",
+  cor_primaria: "#E63946",
+  cor_secundaria: "#FFC300",
 }
 
 export default function CreateStorePage() {
@@ -95,19 +95,56 @@ export default function CreateStorePage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    
+    // Limpar erro do campo quando o usuário começar a digitar
+    if (errors[name]) {
+      setErrors((prev: any) => ({ ...prev, [name]: undefined }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validateStep()) return
+    
     setIsLoading(true)
     setErrors({})
     
     try {
-      await createStore()
+      // Preparar dados para envio (remover campos vazios opcionais)
+      const storeData: any = {
+        nome: formData.nome.trim(),
+      }
+
+      // Adicionar campos opcionais apenas se preenchidos
+      if (formData.descricao.trim()) storeData.descricao = formData.descricao.trim()
+      if (formData.whatsapp.trim()) storeData.whatsapp = formData.whatsapp.trim()
+      if (formData.instagram.trim()) storeData.instagram = formData.instagram.trim()
+      if (formData.facebook.trim()) storeData.facebook = formData.facebook.trim()
+      if (formData.endereco_cep.trim()) storeData.endereco_cep = formData.endereco_cep.trim()
+      if (formData.endereco_rua.trim()) storeData.endereco_rua = formData.endereco_rua.trim()
+      if (formData.endereco_numero.trim()) storeData.endereco_numero = formData.endereco_numero.trim()
+      if (formData.endereco_complemento.trim()) storeData.endereco_complemento = formData.endereco_complemento.trim()
+      if (formData.endereco_bairro.trim()) storeData.endereco_bairro = formData.endereco_bairro.trim()
+      if (formData.endereco_cidade.trim()) storeData.endereco_cidade = formData.endereco_cidade.trim()
+      if (formData.endereco_estado.trim()) storeData.endereco_estado = formData.endereco_estado.trim().toUpperCase()
+      if (formData.cor_primaria) storeData.cor_primaria = formData.cor_primaria
+      if (formData.cor_secundaria) storeData.cor_secundaria = formData.cor_secundaria
+
+      await createStore(storeData)
       router.push("/plans")
     } catch (error: any) {
       console.error('Erro ao criar loja:', error)
-      setErrors({ general: error.message || "Ocorreu um erro ao criar a loja." })
+      
+      if (error.errors) {
+        // Se a API retornou erros de validação específicos
+        const apiErrors: any = {}
+        error.errors.forEach((err: any) => {
+          apiErrors[err.field] = err.message
+        })
+        setErrors(apiErrors)
+      } else {
+        setErrors({ general: error.message || "Ocorreu um erro ao criar a loja." })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -288,7 +325,7 @@ export default function CreateStorePage() {
               id="cor_primaria"
               name="cor_primaria"
               type="color"
-              value={formData.cor_primaria || "#1d4ed8"}
+              value={formData.cor_primaria || "#E63946"}
               onChange={handleChange}
               className="h-12 p-1 w-full"
             />
@@ -299,21 +336,11 @@ export default function CreateStorePage() {
               id="cor_secundaria"
               name="cor_secundaria"
               type="color"
-              value={formData.cor_secundaria || "#f59e42"}
+              value={formData.cor_secundaria || "#FFC300"}
               onChange={handleChange}
               className="h-12 p-1 w-full"
             />
           </div>
-        </div>
-        
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <AlertCircle size={16} className="text-blue-600" />
-            <h3 className="font-semibold text-blue-900">Modo Simplificado</h3>
-          </div>
-          <p className="text-sm text-blue-700">
-            Estamos criando sua loja no modo simplificado. Você poderá personalizar todas essas informações depois através das configurações da loja.
-          </p>
         </div>
         
         <div className="bg-gray-50 rounded-lg p-4 border text-sm">
