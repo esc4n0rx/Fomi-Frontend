@@ -6,11 +6,49 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBilling } from "@/hooks/useBilling";
 import { CreditCard, Calendar, Download, ExternalLink, Crown, AlertTriangle } from "lucide-react";
-import { format } from "date-fns";
-import ptBR from "date-fns/locale/pt-BR/index.js";
+import { format, isValid, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export function BillingManagement() {
   const { subscription, invoices, isLoading, openBillingPortal, cancelSubscription } = useBilling();
+
+  // Função auxiliar para formatar datas com validação
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return "Data não disponível";
+    
+    try {
+      // Tentar converter string ISO para Date
+      const date = parseISO(dateString);
+      
+      // Verificar se a data é válida
+      if (!isValid(date)) {
+        console.warn("Data inválida recebida:", dateString);
+        return "Data inválida";
+      }
+      
+      return format(date, 'dd/MM/yyyy', { locale: ptBR });
+    } catch (error) {
+      console.error("Erro ao formatar data:", error, "Data recebida:", dateString);
+      return "Erro na data";
+    }
+  };
+
+  // Função auxiliar para formatar período
+  const formatPeriod = (startDate: string | undefined, endDate: string | undefined): string => {
+    const formattedStart = formatDate(startDate);
+    const formattedEnd = formatDate(endDate);
+    
+    if (formattedStart === "Data não disponível" || formattedEnd === "Data não disponível") {
+      return "Período não disponível";
+    }
+    
+    if (formattedStart === "Data inválida" || formattedEnd === "Data inválida" || 
+        formattedStart === "Erro na data" || formattedEnd === "Erro na data") {
+      return "Período com data inválida";
+    }
+    
+    return `${formattedStart} - ${formattedEnd}`;
+  };
 
   if (isLoading) {
     return (
@@ -85,13 +123,13 @@ export function BillingManagement() {
                   <div>
                     <p className="text-sm text-gray-500 mb-1">Período Atual</p>
                     <p className="font-medium">
-                      {format(new Date(subscription.current_period_start), 'dd/MM/yyyy', { locale: ptBR })} - {format(new Date(subscription.current_period_end), 'dd/MM/yyyy', { locale: ptBR })}
+                      {formatPeriod(subscription.current_period_start, subscription.current_period_end)}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 mb-1">Próxima Cobrança</p>
                     <p className="font-medium">
-                      {format(new Date(subscription.current_period_end), 'dd/MM/yyyy', { locale: ptBR })}
+                      {formatDate(subscription.current_period_end)}
                     </p>
                   </div>
                 </div>
@@ -102,8 +140,8 @@ export function BillingManagement() {
                     <div>
                       <p className="text-sm font-medium text-yellow-800">Assinatura Cancelada</p>
                       <p className="text-sm text-yellow-700">
-                        Cancelada em {format(new Date(subscription.canceled_at), 'dd/MM/yyyy', { locale: ptBR })}. 
-                        Você terá acesso até {format(new Date(subscription.current_period_end), 'dd/MM/yyyy', { locale: ptBR })}.
+                        Cancelada em {formatDate(subscription.canceled_at)}. 
+                        Você terá acesso até {formatDate(subscription.current_period_end)}.
                       </p>
                     </div>
                   </div>
@@ -175,7 +213,7 @@ export function BillingManagement() {
                       <div>
                         <p className="font-medium">#{invoice.numero_fatura}</p>
                         <p className="text-sm text-gray-600">
-                          {format(new Date(invoice.period_start), 'dd/MM/yyyy', { locale: ptBR })} - {format(new Date(invoice.period_end), 'dd/MM/yyyy', { locale: ptBR })}
+                          {formatPeriod(invoice.period_start, invoice.period_end)}
                         </p>
                       </div>
                     </div>
