@@ -76,19 +76,82 @@ const statusConfig = {
 };
 
 export default function DashboardPage() {
-  const { user, store, isLoading } = useAuth()
+  const { user, store, isLoading, hasStore, hasChosenPlan, refreshStoreStatus } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && !store) {
-      router.push('/dashboard/create-store');
+    console.log('Dashboard - Estado atual:');
+    console.log('- isLoading:', isLoading);
+    console.log('- hasStore:', hasStore);
+    console.log('- hasChosenPlan:', hasChosenPlan);
+    console.log('- store:', store);
+    console.log('- user:', user);
+    
+    if (!isLoading) {
+      if (!hasStore) {
+        console.log('Dashboard - Redirecionando para create-store: não tem loja');
+        router.push('/dashboard/create-store');
+        return;
+      }
+      
+      if (!hasChosenPlan) {
+        console.log('Dashboard - Redirecionando para plans: não escolheu plano');
+        router.push('/plans');
+        return;
+      }
     }
-  }, [isLoading, store, router]);
+  }, [isLoading, hasStore, hasChosenPlan, router]);
 
-  if (isLoading || !store) {
+  // Tentar recarregar o status da loja se necessário
+  useEffect(() => {
+    const hasStoreInStorage = localStorage.getItem('has_store') === 'true';
+    const hasChosenPlanInStorage = localStorage.getItem('has_chosen_plan') === 'true';
+    
+    console.log('Dashboard - Verificando storage:');
+    console.log('- hasStoreInStorage:', hasStoreInStorage);
+    console.log('- hasChosenPlanInStorage:', hasChosenPlanInStorage);
+    console.log('- hasStore (state):', hasStore);
+    console.log('- hasChosenPlan (state):', hasChosenPlan);
+    
+    // Se o localStorage indica que tem loja mas o estado não, recarregar
+    if (hasStoreInStorage && !hasStore && !isLoading) {
+      console.log('Dashboard - Inconsistência detectada, recarregando status da loja...');
+      refreshStoreStatus();
+    }
+  }, [hasStore, hasChosenPlan, isLoading, refreshStoreStatus]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+            <Loader2 className="w-8 h-8 text-white animate-spin" />
+          </div>
+          <p className="text-gray-600 font-medium">Carregando dashboard...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!hasStore || !store) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+            <Loader2 className="w-8 h-8 text-white animate-spin" />
+          </div>
+          <p className="text-gray-600 font-medium">Verificando sua loja...</p>
+        </motion.div>
       </div>
     );
   }

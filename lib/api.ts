@@ -92,18 +92,24 @@ export const storeApi = {
     cor_secundaria?: string;
   }): Promise<{ success: boolean; data: any }> {
     try {
+      console.log('Criando loja com dados:', data);
       const response = await api.post('/stores', data);
+      console.log('Resposta da criação da loja:', response.data);
       return response.data;
     } catch (error: any) {
+      console.error('Erro na API ao criar loja:', error);
       throw error.response?.data || { success: false, message: 'Erro de conexão' };
     }
   },
 
   async getStores(): Promise<{ success: boolean; data: { stores: any[] } }> {
     try {
+      console.log('Buscando lojas do usuário...');
       const response = await api.get('/stores');
+      console.log('Resposta da busca de lojas:', response.data);
       return response.data;
     } catch (error: any) {
+      console.error('Erro na API ao buscar lojas:', error);
       throw error.response?.data || { success: false, message: 'Erro de conexão' };
     }
   },
