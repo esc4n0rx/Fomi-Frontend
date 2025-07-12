@@ -71,8 +71,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       authStorage.setToken(token);
       authStorage.setUser(user);
       setUser(user);
-
-      // Após registro, verificar se já tem loja
       await checkStoreStatus();
     } catch (error: any) {
       throw error;
@@ -106,14 +104,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     cor_secundaria?: string;
   }) => {
     try {
-      const response = await storeApi.createStore(storeData);
-      
-      console.log('Loja criada com sucesso:', response);
-      
-      // Após criar a loja, recarregar o status
+      await storeApi.createStore(storeData);
       await refreshStoreStatus();
-      
-      return response;
     } catch (error: any) {
       console.error('Erro ao criar loja:', error);
       throw error;
@@ -122,17 +114,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const checkStoreStatus = async () => {
     try {
-      console.log('Verificando status da loja...');
       
       const response = await storeApi.getStores();
-      console.log('Resposta da API stores:', response);
       
       const stores = response.data?.stores || [];
       const hasStores = stores.length > 0;
       const firstStore = hasStores ? stores[0] : null;
-      
-      console.log('Lojas encontradas:', stores.length);
-      console.log('Primeira loja:', firstStore);
       
       setHasStore(hasStores);
       setStore(firstStore);
@@ -141,7 +128,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('has_store', 'true');
         authStorage.setStore(firstStore);
         
-        // Atualizar o usuário com os dados da loja
         if (user) {
           const updatedUser = { ...user, store: firstStore };
           setUser(updatedUser);
@@ -152,11 +138,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         authStorage.removeStore();
       }
       
-      // Verificar se já escolheu um plano
       const hasChosenPlan = localStorage.getItem('has_chosen_plan') === 'true';
       setHasChosenPlan(hasChosenPlan);
-      
-      console.log('Status final - hasStore:', hasStores, 'hasChosenPlan:', hasChosenPlan);
     } catch (error) {
       console.error('Erro ao verificar status da loja:', error);
       // Se der erro ao buscar lojas, assumir que não tem loja
@@ -178,13 +161,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setIsLoading(false);
         return;
       }
-
-      console.log('Verificando autenticação...');
       
       const response = await authApi.me();
       const userData = response.data.user;
-      
-      console.log('Dados do usuário autenticado:', userData);
       
       authStorage.setUser(userData);
       setUser(userData);
@@ -209,40 +188,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuth();
   }, []);
 
-  // Lógica de redirecionamento baseada no estado do usuário
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       const currentPath = window.location.pathname;
-      
-      console.log('Verificando redirecionamento - Path atual:', currentPath);
-      console.log('Estado atual - hasStore:', hasStore, 'hasChosenPlan:', hasChosenPlan);
-      
-      // Evitar redirecionamentos em páginas específicas
       const excludedPaths = ['/plans', '/billing/success', '/billing/cancel', '/dashboard/create-store'];
       const isExcludedPath = excludedPaths.some(path => currentPath.startsWith(path));
       
       if (isExcludedPath) {
-        console.log('Página excluída do redirecionamento:', currentPath);
         return;
       }
       
-      // Se não tem loja, redirecionar para criar loja
       if (!hasStore) {
-        console.log('Redirecionando para criar loja - não tem loja');
         window.location.href = '/dashboard/create-store';
         return;
       }
-      
-      // Se tem loja mas não escolheu plano, redirecionar para planos
+    
       if (hasStore && !hasChosenPlan) {
-        console.log('Redirecionando para planos - tem loja mas não escolheu plano');
         window.location.href = '/plans';
         return;
       }
       
-      // Se está na home e já tem tudo configurado, ir para dashboard
       if (currentPath === '/' && hasStore && hasChosenPlan) {
-        console.log('Redirecionando para dashboard - tudo configurado');
         window.location.href = '/dashboard';
       }
     }

@@ -1,9 +1,8 @@
 import axios from 'axios';
 import { LoginRequest, RegisterRequest, AuthResponse, ErrorResponse, User } from '@/types/auth';
 
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+const API_BASE_URL = 'https://api.fomi-eats.shop/api/v1';
 
-// Criar instância do axios
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -11,7 +10,6 @@ const api = axios.create({
   },
 });
 
-// Interceptor para adicionar token automaticamente
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token');
   if (token) {
@@ -20,7 +18,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor para lidar com respostas de erro
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -72,8 +69,6 @@ export const authApi = {
     }
   }
 };
-
-// Funções da loja - corrigidas conforme documentação da API
 export const storeApi = {
   async createStore(data: {
     nome: string;
