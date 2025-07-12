@@ -6,6 +6,7 @@ import { PlanCard } from "@/components/plan-card"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Zap, Shield, BarChart3, Smartphone } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 const plans = [
   {
@@ -54,48 +55,64 @@ export default function HomePage() {
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
         {/* Fundo gradiente animado sutil */}
         <div className="absolute inset-0 -z-10 animate-gradient-x bg-gradient-to-br from-primary/30 via-secondary/20 to-white" />
-        <div className="container mx-auto text-center">
-          <motion.h1
-            className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight drop-shadow-lg"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            Crie sua loja de <span className="gradient-text bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">lanches online</span> em minutos
-          </motion.h1>
-
-          <motion.p
-            className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            Transforme seu negócio com a plataforma mais moderna para delivery de lanches. Sem complicação, sem mensalidades abusivas.
-          </motion.p>
-
-          {/* Botão principal com microinteração profissional */}
-          <motion.div
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            <Link href="/register">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-primary to-secondary text-lg px-8 py-4 shadow-xl transition-transform duration-200 hover:scale-105 hover:shadow-2xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
-              >
-                Começar Grátis
-                <ArrowRight className="ml-2" size={20} />
-              </Button>
-            </Link>
-            <Button
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 py-4 bg-white/80 border-primary/30 hover:bg-primary/10 transition-all duration-300"
+        <div className="container mx-auto relative flex flex-col md:flex-row items-center justify-between gap-8 md:gap-16">
+          <div className="flex-1 flex flex-col items-start justify-center text-left">
+            <motion.h1
+              className="text-5xl md:text-7xl font-extrabold mb-2 leading-tight drop-shadow-lg relative z-20 text-left"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
             >
-              Ver Demo
-            </Button>
+              Crie sua loja de <span className="gradient-text bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">lanches online</span> em minutos
+            </motion.h1>
+            <motion.p
+              className="text-xl text-gray-700 max-w-2xl mt-4 mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              Transforme seu negócio com a plataforma mais moderna para delivery de lanches. Sem complicação, sem mensalidades abusivas.
+            </motion.p>
+            {/* Botões */}
+            <motion.div
+              className="flex flex-col sm:flex-row gap-4 justify-start items-center relative z-30"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              <Link href="/register">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-primary to-secondary text-lg px-8 py-4 shadow-xl transition-transform duration-200 hover:scale-105 hover:shadow-2xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                >
+                  Começar Grátis
+                  <ArrowRight className="ml-2" size={20} />
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                size="lg"
+                className="text-lg px-8 py-4 bg-white/80 border-primary/30 hover:bg-primary/10 transition-all duration-300"
+              >
+                Ver Demo
+              </Button>
+            </motion.div>
+          </div>
+          {/* Card com logo */}
+          <motion.div
+            className="flex-shrink-0 bg-white rounded-3xl shadow-2xl p-8 flex items-center justify-center mt-8 md:mt-0"
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.3, type: 'spring', stiffness: 80 }}
+          >
+            <Image
+              src="/logo/logo.png"
+              alt="Logo Fomi"
+              width={420}
+              height={300}
+              className="w-72 h-52 md:w-[420px] md:h-[300px] object-contain"
+              priority
+            />
           </motion.div>
         </div>
       </section>
@@ -300,11 +317,14 @@ export default function HomePage() {
           <div className="grid md:grid-cols-4 gap-8">
             {/* Logo e descrição */}
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">F</span>
-                </div>
-                <span className="text-2xl font-bold">Fomi</span>
+              <div className="flex items-center mb-4">
+                <Image
+                  src="/logo/logo.png"
+                  alt="Fomi Logo"
+                  width={76}
+                  height={76}
+                  className="w-14 h-14 object-contain"
+                />
               </div>
               <p className="text-gray-400">A plataforma mais moderna para criar sua loja de lanches online.</p>
               {/* Redes sociais */}
@@ -321,8 +341,6 @@ export default function HomePage() {
                 links: [
                   { name: "Recursos", href: "/recursos" },
                   { name: "Preços", href: "/precos" },
-                  { name: "Integrações", href: "/integracoes" },
-                  { name: "API", href: "/api" },
                 ],
               },
               {
@@ -330,15 +348,12 @@ export default function HomePage() {
                 links: [
                   { name: "Central de Ajuda", href: "/central-de-ajuda" },
                   { name: "Contato", href: "/contato" },
-                  { name: "Status", href: "/status" },
-                  { name: "Comunidade", href: "/comunidade" },
                 ],
               },
               {
                 title: "Empresa",
                 links: [
                   { name: "Sobre", href: "/sobre" },
-                  { name: "Blog", href: "/blog" },
                   { name: "Carreiras", href: "/carreiras" },
                   { name: "Imprensa", href: "/imprensa" },
                 ],
@@ -360,7 +375,7 @@ export default function HomePage() {
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Fomi. Todos os direitos reservados.</p>
+            <p>&copy; 2025 Fomi. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>

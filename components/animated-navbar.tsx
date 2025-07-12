@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export function AnimatedNavbar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -21,24 +22,17 @@ export function AnimatedNavbar() {
   return (
     <motion.header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white/95 backdrop-blur-md shadow-lg" : "bg-transparent"
-      }`}
+        isScrolled ? "bg-white/80 backdrop-blur-md shadow-lg" : "bg-white/60 backdrop-blur-md shadow" 
+      } h-16 md:h-20`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <motion.div
-            className="flex items-center space-x-2"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-          >
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">F</span>
-            </div>
-            <span className="text-2xl font-bold gradient-text">Fomi</span>
-          </motion.div>
+      <div className="container mx-auto px-4 py-2">
+        <div className="flex items-center justify-between h-12 md:h-16">
+          <Link href="/" className="flex items-center select-none">
+            <span className="text-2xl md:text-3xl font-extrabold text-primary tracking-tight drop-shadow-sm">Fomi</span>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
