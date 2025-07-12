@@ -8,9 +8,11 @@ import { useBilling } from "@/hooks/useBilling";
 import { CreditCard, Calendar, Download, ExternalLink, Crown, AlertTriangle } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useRouter } from "next/navigation"
 
 export function BillingManagement() {
   const { subscription, invoices, isLoading, openBillingPortal, cancelSubscription } = useBilling();
+  const router = useRouter();
 
   // Função auxiliar para formatar datas com validação
   const formatDate = (dateString: string | undefined): string => {
@@ -173,7 +175,7 @@ export function BillingManagement() {
                 <Crown size={48} className="text-gray-300 mx-auto mb-4" />
                 <h3 className="font-semibold text-gray-900 mb-2">Plano Gratuito</h3>
                 <p className="text-gray-600 mb-4">Você está usando o plano gratuito do Fomi.</p>
-                <Button onClick={() => window.location.href = '/plans'}>
+                <Button onClick={() => router.push('/plans')}>
                   Fazer Upgrade
                 </Button>
               </div>

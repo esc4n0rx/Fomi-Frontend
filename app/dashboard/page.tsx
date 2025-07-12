@@ -6,10 +6,11 @@ import { useAuth } from "@/hooks/useAuth"
 import { SidebarMenu } from "@/components/sidebar-menu"
 import { DashboardCard } from "@/components/dashboard-card"
 import { motion } from "framer-motion"
-import { ShoppingBag, DollarSign, Users, TrendingUp, Bell, Search, Loader2, Link } from "lucide-react"
+import { ShoppingBag, DollarSign, Users, TrendingUp, Bell, Search, Loader2, Link, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { useState, useRef } from "react"
 
 const dashboardData = [
   {
@@ -76,8 +77,25 @@ const statusConfig = {
 };
 
 export default function DashboardPage() {
-  const { user, store, isLoading, hasStore, hasChosenPlan, refreshStoreStatus } = useAuth()
+  const { user, store, isLoading, hasStore, hasChosenPlan, refreshStoreStatus, logout } = useAuth()
   const router = useRouter()
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
+  // Fecha o menu ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    if (userMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [userMenuOpen])
 
   useEffect(() => {
     console.log('Dashboard - Estado atual:');
@@ -184,8 +202,32 @@ export default function DashboardPage() {
                 <Bell size={20} />
               </Button>
 
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">{user?.nome?.charAt(0)}</span>
+              {/* Avatar, nome e menu do usuário */}
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  className="flex items-center gap-2 bg-gradient-to-br from-primary to-secondary rounded-full px-3 py-1.5 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                >
+                  <span className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 text-white font-bold text-lg">
+                    {user?.nome?.charAt(0) || "U"}
+                  </span>
+                  <span className="hidden md:block text-white font-medium">{user?.nome}</span>
+                  <Menu size={18} className="ml-1 text-white/80" />
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border z-50 animate-fade-in">
+                    <div className="px-4 py-3 border-b">
+                      <span className="block text-gray-900 font-semibold">{user?.nome}</span>
+                      <span className="block text-xs text-gray-500">{user?.email}</span>
+                    </div>
+                    <button
+                      className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                      onClick={logout}
+                    >
+                      Sair
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

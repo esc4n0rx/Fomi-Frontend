@@ -69,6 +69,7 @@ export const authApi = {
     }
   }
 };
+
 export const storeApi = {
   async createStore(data: {
     nome: string;
@@ -112,6 +113,54 @@ export const storeApi = {
   async getStoreById(id: string): Promise<{ success: boolean; data: { store: any } }> {
     try {
       const response = await api.get(`/stores/${id}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
+  }
+};
+
+export const categoriesApi = {
+  async getCategories(storeId: string): Promise<{ success: boolean; data: { categories: any[] } }> {
+    try {
+      const response = await api.get(`/categories/${storeId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
+  },
+
+  async createCategory(storeId: string, data: {
+    nome: string;
+    descricao?: string;
+    cor?: string;
+    ordem?: number;
+  }): Promise<{ success: boolean; message: string; data: { category: any } }> {
+    try {
+      const response = await api.post(`/categories/${storeId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
+  },
+
+  async updateCategory(storeId: string, categoryId: string, data: {
+    nome?: string;
+    descricao?: string;
+    cor?: string;
+    ordem?: number;
+  }): Promise<{ success: boolean; message: string; data: { category: any } }> {
+    try {
+      const response = await api.put(`/categories/${storeId}/${categoryId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
+  },
+
+  async deleteCategory(storeId: string, categoryId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await api.delete(`/categories/${storeId}/${categoryId}`);
       return response.data;
     } catch (error: any) {
       throw error.response?.data || { success: false, message: 'Erro de conexão' };

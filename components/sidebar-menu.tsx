@@ -7,11 +7,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { useBilling } from "@/hooks/useBilling"
+import { useAuth } from "@/hooks/useAuth"
 
 export function SidebarMenu() {
   const [isExpanded, setIsExpanded] = useState(true)
   const pathname = usePathname()
   const { subscription, isLoading } = useBilling()
+  const { user } = useAuth()
 
   const menuItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
@@ -134,7 +136,7 @@ export function SidebarMenu() {
           whileHover={{ scale: 1.02 }}
         >
           <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold text-sm">JD</span>
+            <span className="text-white font-semibold text-sm">{user?.nome?.split(' ').map(n => n[0]).join('') || 'U'}</span>
           </div>
           <AnimatePresence>
             {isExpanded && (
@@ -145,7 +147,7 @@ export function SidebarMenu() {
                 transition={{ duration: 0.2 }}
                 className="flex-1"
               >
-                <p className="font-medium text-gray-900">João Silva</p>
+                <p className="font-medium text-gray-900">{user?.nome || 'Usuário'}</p>
                 <Badge className={`text-xs ${planInfo.color}`}>
                   {planInfo.name}
                 </Badge>
