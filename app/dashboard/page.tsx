@@ -77,7 +77,7 @@ const statusConfig = {
 };
 
 export default function DashboardPage() {
-  const { user, store, isLoading, hasStore, hasChosenPlan, refreshStoreStatus, logout } = useAuth()
+  const { user, store, isLoading, hasStore, hasChosenPlan, refreshStoreStatus, checkSubscriptionStatus, logout } = useAuth()
   const router = useRouter()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -120,7 +120,7 @@ export default function DashboardPage() {
     }
   }, [isLoading, hasStore, hasChosenPlan, router]);
 
-  // Tentar recarregar o status da loja se necessário
+  // Tentar recarregar o status da loja e assinatura se necessário
   useEffect(() => {
     const hasStoreInStorage = localStorage.getItem('has_store') === 'true';
     const hasChosenPlanInStorage = localStorage.getItem('has_chosen_plan') === 'true';
@@ -136,7 +136,13 @@ export default function DashboardPage() {
       console.log('Dashboard - Inconsistência detectada, recarregando status da loja...');
       refreshStoreStatus();
     }
-  }, [hasStore, hasChosenPlan, isLoading, refreshStoreStatus]);
+    
+    // Se o localStorage indica que tem plano mas o estado não, recarregar
+    if (hasChosenPlanInStorage && !hasChosenPlan && !isLoading) {
+      console.log('Dashboard - Inconsistência detectada, recarregando status da assinatura...');
+      checkSubscriptionStatus();
+    }
+  }, [hasStore, hasChosenPlan, isLoading, refreshStoreStatus, checkSubscriptionStatus]);
 
   if (isLoading) {
     return (
@@ -189,7 +195,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600">Bem-vindo de volta, {user?.nome}! Visualizando dados da {store?.nome}.</p>
+              <p className="text-gray-600">Bem-vindo de volta, {user?.name}! Visualizando dados da {store?.nome}.</p>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -209,15 +215,15 @@ export default function DashboardPage() {
                   onClick={() => setUserMenuOpen((v) => !v)}
                 >
                   <span className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 text-white font-bold text-lg">
-                    {user?.nome?.charAt(0) || "U"}
+                    {user?.name?.charAt(0) || "U"}
                   </span>
-                  <span className="hidden md:block text-white font-medium">{user?.nome}</span>
+                  <span className="hidden md:block text-white font-medium">{user?.name}</span>
                   <Menu size={18} className="ml-1 text-white/80" />
                 </button>
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border z-50 animate-fade-in">
                     <div className="px-4 py-3 border-b">
-                      <span className="block text-gray-900 font-semibold">{user?.nome}</span>
+                      <span className="block text-gray-900 font-semibold">{user?.name}</span>
                       <span className="block text-xs text-gray-500">{user?.email}</span>
                     </div>
                     <button

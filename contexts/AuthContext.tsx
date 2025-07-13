@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, LoginRequest, RegisterRequest, Store } from '@/types/auth';
 import { authApi, storeApi } from '@/lib/api';
+import { billingApi } from '@/lib/billing';
 import { authStorage } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 
@@ -34,6 +35,7 @@ interface AuthContextType {
     cor_secundaria?: string;
   }) => Promise<void>;
   refreshStoreStatus: () => Promise<void>;
+  checkSubscriptionStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,6 +49,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const isAuthenticated = !!user;
 
+  const checkSubscriptionStatus = async () => {
+    try {
+      const response = await billingApi.getSubscription();
+      const subscription = response.data?.subscription;
+      
+      // Verifica se existe uma assinatura ativa
+      const hasActiveSubscription = !!(subscription && subscription.active && subscription.status === 'active');
+      
+      setHasChosenPlan(hasActiveSubscription);
+      
+      if (hasActiveSubscription) {
+        localStorage.setItem('has_chosen_plan', 'true');
+      } else {
+        localStorage.removeItem('has_chosen_plan');
+      }
+      
+      console.log('Status da assinatura:', {
+        subscription,
+        hasActiveSubscription,
+        status: subscription?.status,
+        active: subscription?.active
+      });
+      
+    } catch (error) {
+      console.error('Erro ao verificar assinatura:', error);
+      // Se der erro, assumir que não tem plano ativo
+      setHasChosenPlan(false);
+      localStorage.removeItem('has_chosen_plan');
+    }
+  };
+
   const login = async (credentials: LoginRequest) => {
     try {
       const response = await authApi.login(credentials);
@@ -56,8 +89,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       authStorage.setUser(user);
       setUser(user);
 
-      // Verificar loja após login
+      // Verificar loja e assinatura após login
       await checkStoreStatus();
+      await checkSubscriptionStatus();
     } catch (error: any) {
       throw error;
     }
@@ -72,6 +106,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       authStorage.setUser(user);
       setUser(user);
       await checkStoreStatus();
+      await checkSubscriptionStatus();
     } catch (error: any) {
       throw error;
     }
@@ -138,8 +173,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         authStorage.removeStore();
       }
       
-      const hasChosenPlan = localStorage.getItem('has_chosen_plan') === 'true';
-      setHasChosenPlan(hasChosenPlan);
     } catch (error) {
       console.error('Erro ao verificar status da loja:', error);
       // Se der erro ao buscar lojas, assumir que não tem loja
@@ -168,8 +201,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       authStorage.setUser(userData);
       setUser(userData);
 
-      // Verificar status da loja
+      // Verificar status da loja e assinatura
       await checkStoreStatus();
+      await checkSubscriptionStatus();
     } catch (error) {
       console.error('Erro na autenticação:', error);
       authStorage.clear();
@@ -229,6 +263,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         checkAuth,
         createStore,
         refreshStoreStatus,
+        checkSubscriptionStatus,
       }}
     >
       {children}

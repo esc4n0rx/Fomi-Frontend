@@ -14,55 +14,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Search, Plus, Edit, Trash2, Grid, Loader2, X, Palette } from "lucide-react"
 import { categoriesApi } from "@/lib/api"
 import { Category, CreateCategoryRequest, UpdateCategoryRequest } from "@/types/auth"
-
-// Dados mockados para demonstração (serão substituídos pela API)
-const mockCategories: Category[] = [
-  {
-    id: "1",
-    nome: "Hambúrgueres",
-    descricao: "Hambúrgueres artesanais e tradicionais",
-    cor: "#E63946",
-    ordem: 1,
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-  },
-  {
-    id: "2",
-    nome: "Pizzas",
-    descricao: "Pizzas tradicionais e especiais",
-    cor: "#FFC300",
-    ordem: 2,
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-  },
-  {
-    id: "3",
-    nome: "Bebidas",
-    descricao: "Sucos, refrigerantes e bebidas especiais",
-    cor: "#06D6A0",
-    ordem: 3,
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-  },
-  {
-    id: "4",
-    nome: "Acompanhamentos",
-    descricao: "Batatas, saladas e outros acompanhamentos",
-    cor: "#F72585",
-    ordem: 4,
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-  },
-  {
-    id: "5",
-    nome: "Sobremesas",
-    descricao: "Doces e sobremesas especiais",
-    cor: "#7209B7",
-    ordem: 5,
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-  },
-]
+import { useAuth } from "@/contexts/AuthContext"
 
 const colorOptions = [
   "#E63946", "#FFC300", "#06D6A0", "#F72585", "#7209B7",
@@ -85,19 +37,25 @@ export default function CategoriesPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+  const { store } = useAuth()
 
-  // Simular carregamento de dados da API
+  // Carregar categorias da API
   useEffect(() => {
     const loadCategories = async () => {
+      if (!store?.id) {
+        setLoading(false)
+        return
+      }
+
       try {
         setLoading(true)
-        // Simular delay da API
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        setCategories(mockCategories)
-      } catch (error) {
+        const response = await categoriesApi.getCategories(store.id)
+        setCategories(response.data.categories || [])
+      } catch (error: any) {
+        console.error('Erro ao carregar categorias:', error)
         toast({
           title: "Erro",
-          description: "Erro ao carregar categorias",
+          description: error.message || "Erro ao carregar categorias",
           variant: "destructive",
         })
       } finally {
@@ -106,7 +64,7 @@ export default function CategoriesPage() {
     }
 
     loadCategories()
-  }, [toast])
+  }, [store?.id, toast])
 
   const filteredCategories = categories.filter(category =>
     category.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,6 +72,15 @@ export default function CategoriesPage() {
   )
 
   const handleCreateCategory = async () => {
+    if (!store?.id) {
+      toast({
+        title: "Erro",
+        description: "Loja não encontrada",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!formData.nome.trim()) {
       toast({
         title: "Erro",
@@ -125,31 +92,20 @@ export default function CategoriesPage() {
 
     setIsSubmitting(true)
     try {
-      // Simular criação na API
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-             const newCategory: Category = {
-         id: Date.now().toString(),
-         nome: formData.nome,
-         descricao: formData.descricao,
-         cor: formData.cor,
-         ordem: formData.ordem || 0,
-         created_at: new Date().toISOString(),
-         updated_at: new Date().toISOString(),
-       }
-
-      setCategories(prev => [...prev, newCategory])
+      const response = await categoriesApi.createCategory(store.id, formData)
+      setCategories(prev => [...prev, response.data.category])
       setIsCreateModalOpen(false)
       resetForm()
       
       toast({
         title: "Sucesso",
-        description: "Categoria criada com sucesso",
+        description: response.message || "Categoria criada com sucesso",
       })
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erro ao criar categoria:', error)
       toast({
         title: "Erro",
-        description: "Erro ao criar categoria",
+        description: error.message || "Erro ao criar categoria",
         variant: "destructive",
       })
     } finally {
@@ -158,7 +114,16 @@ export default function CategoriesPage() {
   }
 
   const handleEditCategory = async () => {
-    if (!editingCategory || !formData.nome.trim()) {
+    if (!store?.id || !editingCategory) {
+      toast({
+        title: "Erro",
+        description: "Loja não encontrada",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!formData.nome.trim()) {
       toast({
         title: "Erro",
         description: "Nome da categoria é obrigatório",
@@ -169,20 +134,9 @@ export default function CategoriesPage() {
 
     setIsSubmitting(true)
     try {
-      // Simular atualização na API
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-             const updatedCategory: Category = {
-         ...editingCategory,
-         nome: formData.nome,
-         descricao: formData.descricao,
-         cor: formData.cor,
-         ordem: formData.ordem || 0,
-         updated_at: new Date().toISOString(),
-       }
-
+      const response = await categoriesApi.updateCategory(store.id, editingCategory.id, formData)
       setCategories(prev => prev.map(cat => 
-        cat.id === editingCategory.id ? updatedCategory : cat
+        cat.id === editingCategory.id ? response.data.category : cat
       ))
       setIsEditModalOpen(false)
       setEditingCategory(null)
@@ -190,12 +144,13 @@ export default function CategoriesPage() {
       
       toast({
         title: "Sucesso",
-        description: "Categoria atualizada com sucesso",
+        description: response.message || "Categoria atualizada com sucesso",
       })
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erro ao atualizar categoria:', error)
       toast({
         title: "Erro",
-        description: "Erro ao atualizar categoria",
+        description: error.message || "Erro ao atualizar categoria",
         variant: "destructive",
       })
     } finally {
@@ -204,22 +159,30 @@ export default function CategoriesPage() {
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
+    if (!store?.id) {
+      toast({
+        title: "Erro",
+        description: "Loja não encontrada",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!confirm("Tem certeza que deseja excluir esta categoria?")) return
 
     try {
-      // Simular exclusão na API
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
+      await categoriesApi.deleteCategory(store.id, categoryId)
       setCategories(prev => prev.filter(cat => cat.id !== categoryId))
       
       toast({
         title: "Sucesso",
         description: "Categoria excluída com sucesso",
       })
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erro ao excluir categoria:', error)
       toast({
         title: "Erro",
-        description: "Erro ao excluir categoria",
+        description: error.message || "Erro ao excluir categoria",
         variant: "destructive",
       })
     }
@@ -248,6 +211,20 @@ export default function CategoriesPage() {
   const openCreateModal = () => {
     resetForm()
     setIsCreateModalOpen(true)
+  }
+
+  if (!store?.id) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <SidebarMenu />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-gray-600">Carregando informações da loja...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

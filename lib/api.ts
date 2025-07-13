@@ -168,4 +168,77 @@ export const categoriesApi = {
   }
 };
 
+export const productsApi = {
+  async getProducts(storeId: string, filters?: {
+    category_id?: string;
+    disponivel?: boolean;
+    destaque?: boolean;
+  }): Promise<{ success: boolean; data: { products: any[] } }> {
+    try {
+      const params = new URLSearchParams();
+      if (filters?.category_id) params.append('category_id', filters.category_id);
+      if (filters?.disponivel !== undefined) params.append('disponivel', filters.disponivel.toString());
+      if (filters?.destaque !== undefined) params.append('destaque', filters.destaque.toString());
+      
+      const response = await api.get(`/products/${storeId}?${params.toString()}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
+  },
+
+  async createProduct(storeId: string, data: {
+    nome: string;
+    descricao?: string;
+    preco: number;
+    preco_promocional?: number;
+    category_id?: string;
+    ingredientes?: string[];
+    alergicos?: string[];
+    tempo_preparo_min?: number;
+    disponivel?: boolean;
+    destaque?: boolean;
+    imagem_url?: string;
+    ordem?: number;
+  }): Promise<{ success: boolean; message: string; data: { product: any } }> {
+    try {
+      const response = await api.post(`/products/${storeId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
+  },
+
+  async updateProduct(storeId: string, productId: string, data: {
+    nome?: string;
+    descricao?: string;
+    preco?: number;
+    preco_promocional?: number;
+    category_id?: string;
+    ingredientes?: string[];
+    alergicos?: string[];
+    tempo_preparo_min?: number;
+    disponivel?: boolean;
+    destaque?: boolean;
+    imagem_url?: string;
+    ordem?: number;
+  }): Promise<{ success: boolean; message: string; data: { product: any } }> {
+    try {
+      const response = await api.put(`/products/${storeId}/${productId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
+  },
+
+  async deleteProduct(storeId: string, productId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await api.delete(`/products/${storeId}/${productId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
+  }
+};
+
 export default api;
