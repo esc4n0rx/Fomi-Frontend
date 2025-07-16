@@ -14,6 +14,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasStore: boolean;
   hasChosenPlan: boolean;
+  canUploadImages: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
@@ -46,18 +47,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
   const [hasStore, setHasStore] = useState(false);
   const [hasChosenPlan, setHasChosenPlan] = useState(false);
+  const [canUploadImages, setCanUploadImages] = useState(false);
 
   const isAuthenticated = !!user;
 
   const checkSubscriptionStatus = async () => {
     try {
       const response = await billingApi.getSubscription();
-      const subscription = response.data?.subscription;
       
-      // Verifica se existe uma assinatura ativa
-      const hasActiveSubscription = !!(subscription && subscription.active && subscription.status === 'active');
+      let subscription = response.data?.subscription;
+    
+      if (!subscription && response.data && typeof response.data === 'object') {
+        const data = response.data as any;
+        if (data.id && data.status && data.active !== undefined) {
+          subscription = data;
+        }
+      }
+      
+      const hasActiveSubscription = !!(
+        subscription && 
+        subscription.active && 
+        subscription.status === 'active' &&
+        (subscription.plano === 'fomi_duplo' || subscription.plano === 'fomi_supremo')
+      );
+      
+      const canUpload = !!(
+        subscription && 
+        subscription.active && 
+        subscription.status === 'active' &&
+        (subscription.plano === 'fomi_duplo' || subscription.plano === 'fomi_supremo')
+      );
       
       setHasChosenPlan(hasActiveSubscription);
+      setCanUploadImages(canUpload);
       
       if (hasActiveSubscription) {
         localStorage.setItem('has_chosen_plan', 'true');
@@ -69,7 +91,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         subscription,
         hasActiveSubscription,
         status: subscription?.status,
-        active: subscription?.active
+        active: subscription?.active,
+        plano: subscription?.plano,
+        responseData: response.data
       });
       
     } catch (error) {
@@ -120,6 +144,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setStore(null);
     setHasStore(false);
     setHasChosenPlan(false);
+    setCanUploadImages(false);
   };
 
   const createStore = async (storeData: {
@@ -204,6 +229,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Verificar status da loja e assinatura
       await checkStoreStatus();
       await checkSubscriptionStatus();
+      
+      console.log('checkAuth - Verificações concluídas:', {
+        hasStore,
+        hasChosenPlan,
+        user: userData
+      });
     } catch (error) {
       console.error('Erro na autenticação:', error);
       authStorage.clear();
@@ -213,6 +244,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setStore(null);
       setHasStore(false);
       setHasChosenPlan(false);
+      setCanUploadImages(false);
     } finally {
       setIsLoading(false);
     }
@@ -225,24 +257,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       const currentPath = window.location.pathname;
-      const excludedPaths = ['/plans', '/billing/success', '/billing/cancel', '/dashboard/create-store'];
+      const excludedPaths = ['/billing/success', '/billing/cancel', '/dashboard/create-store'];
       const isExcludedPath = excludedPaths.some(path => currentPath.startsWith(path));
       
+      console.log('AuthContext - Verificação de redirecionamento:', {
+        currentPath,
+        isExcludedPath,
+        hasStore,
+        hasChosenPlan,
+        isLoading,
+        isAuthenticated
+      });
+      
       if (isExcludedPath) {
+        console.log('AuthContext - Caminho excluído, não redirecionando');
         return;
       }
       
       if (!hasStore) {
+        console.log('AuthContext - Redirecionando para create-store: não tem loja');
         window.location.href = '/dashboard/create-store';
         return;
       }
     
       if (hasStore && !hasChosenPlan) {
+        console.log('AuthContext - Redirecionando para plans: tem loja mas não tem plano ativo');
         window.location.href = '/plans';
         return;
       }
       
+      // Se tem loja e plano ativo, redirecionar para dashboard (exceto se já estiver lá)
+      if (hasStore && hasChosenPlan && currentPath !== '/dashboard') {
+        console.log('AuthContext - Redirecionando para dashboard: tem loja e plano ativo');
+        window.location.href = '/dashboard';
+        return;
+      }
+      
       if (currentPath === '/' && hasStore && hasChosenPlan) {
+        console.log('AuthContext - Redirecionando para dashboard: tem loja e plano ativo');
         window.location.href = '/dashboard';
       }
     }
@@ -257,6 +309,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isAuthenticated,
         hasStore,
         hasChosenPlan,
+        canUploadImages,
         login,
         register,
         logout,

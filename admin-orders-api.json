@@ -1,0 +1,404 @@
+{
+    "name": "Fomi - API Administrativa de Pedidos",
+    "description": "API para lojistas gerenciarem pedidos de suas lojas",
+    "baseUrl": "/api/v1/orders",
+    "authentication": "JWT Bearer Token",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/{storeId}",
+        "name": "Listar Pedidos da Loja",
+        "description": "Lista pedidos da loja com filtros e paginação",
+        "headers": {
+          "Authorization": "Bearer {jwt_token}",
+          "Content-Type": "application/json"
+        },
+        "parameters": {
+          "path": {
+            "storeId": {
+              "type": "string",
+              "format": "uuid",
+              "required": true,
+              "description": "ID da loja"
+            }
+          },
+          "query": {
+            "status": {
+              "type": "string",
+              "enum": ["pendente", "confirmado", "preparando", "saiu_entrega", "entregue", "cancelado"],
+              "required": false,
+              "description": "Filtrar por status do pedido"
+            },
+            "data_inicio": {
+              "type": "string",
+              "format": "date",
+              "required": false,
+              "description": "Data início do filtro (YYYY-MM-DD)"
+            },
+            "data_fim": {
+              "type": "string",
+              "format": "date",
+              "required": false,
+              "description": "Data fim do filtro (YYYY-MM-DD)"
+            },
+            "page": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "required": false,
+              "description": "Página atual"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "required": false,
+              "description": "Itens por página"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lista de pedidos retornada com sucesso",
+            "body": {
+              "success": true,
+              "data": {
+                "orders": [
+                  {
+                    "id": "550e8400-e29b-41d4-a716-446655440000",
+                    "numero_pedido": "202412140001",
+                    "status": "pendente",
+                    "cliente_nome": "João Silva",
+                    "cliente_telefone": "11987654321",
+                    "cliente_email": "joao@email.com",
+                    "subtotal": 45.90,
+                    "desconto": 5.00,
+                    "taxa_entrega": 8.00,
+                    "total": 48.90,
+                    "metodo_pagamento": "pix",
+                    "tipo_entrega": "entrega",
+                    "pedido_em": "2024-12-14T10:30:00Z",
+                    "tempo_estimado_min": 30,
+                    "customer": {
+                      "id": "customer-uuid",
+                      "nome": "João Silva",
+                      "telefone": "11987654321"
+                    }
+                  }
+                ],
+                "pagination": {
+                  "page": 1,
+                  "limit": 20,
+                  "total": 150,
+                  "pages": 8
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token de acesso inválido ou expirado",
+            "body": {
+              "success": false,
+              "message": "Token inválido"
+            }
+          },
+          "404": {
+            "description": "Loja não encontrada ou acesso negado",
+            "body": {
+              "success": false,
+              "message": "Loja não encontrada ou acesso negado"
+            }
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/{storeId}/{id}",
+        "name": "Buscar Pedido Específico",
+        "description": "Retorna detalhes completos de um pedido específico",
+        "headers": {
+          "Authorization": "Bearer {jwt_token}",
+          "Content-Type": "application/json"
+        },
+        "parameters": {
+          "path": {
+            "storeId": {
+              "type": "string",
+              "format": "uuid",
+              "required": true,
+              "description": "ID da loja"
+            },
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "required": true,
+              "description": "ID do pedido"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Detalhes do pedido retornados com sucesso",
+            "body": {
+              "success": true,
+              "data": {
+                "order": {
+                  "id": "550e8400-e29b-41d4-a716-446655440000",
+                  "numero_pedido": "202412140001",
+                  "status": "confirmado",
+                  "cliente_nome": "João Silva",
+                  "cliente_telefone": "11987654321",
+                  "cliente_email": "joao@email.com",
+                  "endereco_cep": "01234-567",
+                  "endereco_rua": "Rua das Flores, 123",
+                  "endereco_numero": "123",
+                  "endereco_bairro": "Centro",
+                  "endereco_cidade": "São Paulo",
+                  "endereco_estado": "SP",
+                  "subtotal": 45.90,
+                  "desconto": 5.00,
+                  "taxa_entrega": 8.00,
+                  "total": 48.90,
+                  "cupom_codigo": "DESCONTO10",
+                  "cupom_desconto": 5.00,
+                  "metodo_pagamento": "pix",
+                  "tipo_entrega": "entrega",
+                  "observacoes": "Sem cebola",
+                  "tempo_estimado_min": 30,
+                  "pedido_em": "2024-12-14T10:30:00Z",
+                  "confirmado_em": "2024-12-14T10:32:00Z",
+                  "customer": {
+                    "id": "customer-uuid",
+                    "nome": "João Silva",
+                    "telefone": "11987654321",
+                    "email": "joao@email.com"
+                  },
+                  "store": {
+                    "id": "store-uuid",
+                    "nome": "Hamburgeria do João",
+                    "telefone": "1133334444",
+                    "whatsapp": "11987654321"
+                  },
+                  "items": [
+                    {
+                      "id": "item-uuid",
+                      "product_id": "product-uuid",
+                      "produto_nome": "X-Burger",
+                      "produto_descricao": "Hamburger artesanal com queijo",
+                      "produto_preco": 25.90,
+                      "quantidade": 1,
+                      "preco_unitario": 25.90,
+                      "subtotal": 25.90,
+                      "observacoes": "Sem cebola",
+                      "product": {
+                        "id": "product-uuid",
+                        "nome": "X-Burger"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pedido não encontrado",
+            "body": {
+              "success": false,
+              "message": "Pedido não encontrado"
+            }
+          }
+        }
+      },
+      {
+        "method": "PATCH",
+        "path": "/{storeId}/{id}/status",
+        "name": "Atualizar Status do Pedido",
+        "description": "Atualiza o status de um pedido específico",
+        "headers": {
+          "Authorization": "Bearer {jwt_token}",
+          "Content-Type": "application/json"
+        },
+        "parameters": {
+          "path": {
+            "storeId": {
+              "type": "string",
+              "format": "uuid",
+              "required": true,
+              "description": "ID da loja"
+            },
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "required": true,
+              "description": "ID do pedido"
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["pendente", "confirmado", "preparando", "saiu_entrega", "entregue", "cancelado"],
+                    "description": "Novo status do pedido"
+                  },
+                  "motivo_cancelamento": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "Motivo do cancelamento (obrigatório se status for 'cancelado')"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status atualizado com sucesso",
+            "body": {
+              "success": true,
+              "message": "Status do pedido atualizado com sucesso",
+              "data": {
+                "order": {
+                  "id": "550e8400-e29b-41d4-a716-446655440000",
+                  "numero_pedido": "202412140001",
+                  "status": "preparando",
+                  "preparando_em": "2024-12-14T10:35:00Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Transição de status inválida",
+            "body": {
+              "success": false,
+              "message": "Transição de status inválida: confirmado -> entregue"
+            }
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/{storeId}/{id}/notes",
+        "name": "Adicionar Observação ao Pedido",
+        "description": "Adiciona uma observação interna ao pedido",
+        "headers": {
+          "Authorization": "Bearer {jwt_token}",
+          "Content-Type": "application/json"
+        },
+        "parameters": {
+          "path": {
+            "storeId": {
+              "type": "string",
+              "format": "uuid",
+              "required": true,
+              "description": "ID da loja"
+            },
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "required": true,
+              "description": "ID do pedido"
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["observacao"],
+                "properties": {
+                  "observacao": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "description": "Observação a ser adicionada"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Observação adicionada com sucesso",
+            "body": {
+              "success": true,
+              "message": "Observação adicionada com sucesso",
+              "data": {
+                "order": {
+                  "id": "550e8400-e29b-41d4-a716-446655440000",
+                  "observacoes": "Sem cebola\n[14/12/2024 10:40:00] Cliente ligou perguntando sobre o tempo"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/{storeId}/statistics",
+        "name": "Estatísticas de Pedidos",
+        "description": "Retorna estatísticas de pedidos da loja",
+        "headers": {
+          "Authorization": "Bearer {jwt_token}",
+          "Content-Type": "application/json"
+        },
+        "parameters": {
+          "path": {
+            "storeId": {
+              "type": "string",
+              "format": "uuid",
+              "required": true,
+              "description": "ID da loja"
+            }
+          },
+          "query": {
+            "data_inicio": {
+              "type": "string",
+              "format": "date",
+              "required": false,
+              "description": "Data início do filtro (YYYY-MM-DD)"
+            },
+            "data_fim": {
+              "type": "string",
+              "format": "date",
+              "required": false,
+              "description": "Data fim do filtro (YYYY-MM-DD)"
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Estatísticas retornadas com sucesso",
+            "body": {
+              "success": true,
+              "data": {
+                "statistics": {
+                  "total_pedidos": 150,
+                  "total_vendas": 7850.50,
+                  "ticket_medio": 52.34,
+                  "pedidos_por_status": {
+                    "pendente": 5,
+                    "confirmado": 8,
+                    "preparando": 3,
+                    "saiu_entrega": 2,
+                    "entregue": 125,
+                    "cancelado": 7
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  }

@@ -1,0 +1,287 @@
+{
+    "store_customization": {
+      "visual_update": {
+        "payload": {
+          "cor_primaria": "#FF6B35",
+          "cor_secundaria": "#F7931E", 
+          "cor_texto": "#333333",
+          "cor_fundo": "#FFFFFF",
+          "fonte_titulo": "Roboto",
+          "fonte_texto": "Arial"
+        },
+        "validation": {
+          "cor_primaria": "Hex color format (#RRGGBB)",
+          "cor_secundaria": "Hex color format (#RRGGBB)",
+          "cor_texto": "Hex color format (#RRGGBB)",
+          "cor_fundo": "Hex color format (#RRGGBB)",
+          "fonte_titulo": ["Arial", "Helvetica", "Georgia", "Times", "Verdana", "Roboto", "Open Sans", "Lato"],
+          "fonte_texto": ["Arial", "Helvetica", "Georgia", "Times", "Verdana", "Roboto", "Open Sans", "Lato"]
+        }
+      }
+    },
+    "image_upload_specifications": {
+      "logo": {
+        "dimensions": {
+          "min_width": 100,
+          "max_width": 512,
+          "min_height": 100,
+          "max_height": 512,
+          "aspect_ratio": "Quadrado ou próximo (0.5 - 2.0)"
+        },
+        "file": {
+          "max_size": "2MB",
+          "formats": ["jpeg", "jpg", "png", "webp"],
+          "mime_types": ["image/jpeg", "image/png", "image/webp"]
+        },
+        "cloudinary_transformations": {
+          "width": 300,
+          "height": 300,
+          "crop": "fit",
+          "quality": "auto:good"
+        }
+      },
+      "banner": {
+        "dimensions": {
+          "min_width": 800,
+          "max_width": 1920,
+          "min_height": 200,
+          "max_height": 600,
+          "aspect_ratio": "Banner format (2.0 - 6.0)"
+        },
+        "file": {
+          "max_size": "5MB",
+          "formats": ["jpeg", "jpg", "png", "webp"],
+          "mime_types": ["image/jpeg", "image/png", "image/webp"]
+        },
+        "cloudinary_transformations": {
+          "width": 1200,
+          "height": 400,
+          "crop": "fill",
+          "gravity": "center",
+          "quality": "auto:good"
+        }
+      },
+      "product": {
+        "dimensions": {
+          "min_width": 200,
+          "max_width": 1024,
+          "min_height": 200,
+          "max_height": 1024,
+          "aspect_ratio": "Flexível (0.5 - 2.0)"
+        },
+        "file": {
+          "max_size": "3MB",
+          "formats": ["jpeg", "jpg", "png", "webp"],
+          "mime_types": ["image/jpeg", "image/png", "image/webp"]
+        },
+        "cloudinary_transformations": {
+          "width": 600,
+          "height": 600,
+          "crop": "fit",
+          "quality": "auto:good"
+        },
+        "extra_images": {
+          "max_count": 5,
+          "same_specifications": true
+        }
+      },
+      "category": {
+        "dimensions": {
+          "min_width": 100,
+          "max_width": 512,
+          "min_height": 100,
+          "max_height": 512,
+          "aspect_ratio": "Quadrado ou próximo (0.5 - 2.0)"
+        },
+        "file": {
+          "max_size": "2MB",
+          "formats": ["jpeg", "jpg", "png", "webp"],
+          "mime_types": ["image/jpeg", "image/png", "image/webp"]
+        },
+        "cloudinary_transformations": {
+          "width": 300,
+          "height": 300,
+          "crop": "fit",
+          "quality": "auto:good"
+        }
+      }
+    },
+    "plan_permissions": {
+      "fomi_simples": {
+        "features": {
+          "logo_upload": true,
+          "banner_upload": false,
+          "custom_colors": false,
+          "custom_fonts": false,
+          "product_images": false,
+          "category_images": false
+        },
+        "allowed_uploads": ["logo"],
+        "restrictions": {
+          "banner": "Upgrade para plano Duplo ou Supremo",
+          "colors": "Upgrade para plano Duplo ou Supremo", 
+          "fonts": "Upgrade para plano Duplo ou Supremo",
+          "product_images": "Upgrade para plano Duplo ou Supremo",
+          "category_images": "Upgrade para plano Duplo ou Supremo"
+        }
+      },
+      "fomi_duplo": {
+        "features": {
+          "logo_upload": true,
+          "banner_upload": true,
+          "custom_colors": true,
+          "custom_fonts": true,
+          "product_images": true,
+          "category_images": true
+        },
+        "allowed_uploads": ["logo", "banner", "product_image", "category_image"],
+        "restrictions": {}
+      },
+      "fomi_supremo": {
+        "features": {
+          "logo_upload": true,
+          "banner_upload": true,
+          "custom_colors": true,
+          "custom_fonts": true,
+          "product_images": true,
+          "category_images": true
+        },
+        "allowed_uploads": ["logo", "banner", "product_image", "category_image"],
+        "restrictions": {}
+      }
+    },
+    "error_responses": {
+      "upload_permission_denied": {
+        "status": 403,
+        "body": {
+          "success": false,
+          "message": "Upload de {type} não disponível no plano {plan}",
+          "upgrade_required": true,
+          "allowed_uploads": ["logo"]
+        }
+      },
+      "invalid_image_format": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "message": "Formato não suportado. Use: jpeg, jpg, png, webp"
+        }
+      },
+      "invalid_image_dimensions": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "message": "Dimensões inválidas para {type}. Largura: {min_width}-{max_width}px, Altura: {min_height}-{max_height}px"
+        }
+      },
+      "file_too_large": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "message": "Arquivo muito grande. Máximo {max_size} para {type}"
+        }
+      },
+      "max_extra_images": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "message": "Máximo de 5 imagens extras por produto"
+        }
+      }
+    },
+    "success_responses": {
+      "logo_uploaded": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "Logo atualizado com sucesso",
+          "data": {
+            "store": "{ ... store object ... }",
+            "logo_url": "https://res.cloudinary.com/..."
+          }
+        }
+      },
+      "banner_uploaded": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "Banner atualizado com sucesso",
+          "data": {
+            "store": "{ ... store object ... }",
+            "banner_url": "https://res.cloudinary.com/..."
+          }
+        }
+      },
+      "customization_updated": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "Personalização atualizada com sucesso",
+          "data": {
+            "store": "{ ... updated store object ... }"
+          }
+        }
+      },
+      "product_image_uploaded": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "Imagem do produto atualizada com sucesso",
+          "data": {
+            "product": "{ ... product object ... }",
+            "imagem_url": "https://res.cloudinary.com/..."
+          }
+        }
+      },
+      "product_extra_image_added": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "Imagem extra adicionada com sucesso",
+          "data": {
+            "product": "{ ... product object ... }",
+            "imagens_extras": ["url1", "url2", "..."]
+          }
+        }
+      },
+      "category_image_uploaded": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "Imagem da categoria atualizada com sucesso",
+          "data": {
+            "category": "{ ... category object ... }",
+            "imagem_url": "https://res.cloudinary.com/..."
+          }
+        }
+      }
+    },
+    "frontend_implementation_tips": {
+      "file_upload": {
+        "html_input": "<input type='file' accept='image/jpeg,image/jpg,image/png,image/webp' />",
+        "javascript_validation": {
+          "file_size": "file.size <= maxSize",
+          "file_type": "allowedTypes.includes(file.type)",
+          "image_dimensions": "Use FileReader + Image object to validate"
+        },
+        "form_data": "const formData = new FormData(); formData.append('image', file);"
+      },
+      "plan_check": {
+        "before_upload": "Check user plan and feature permissions",
+        "show_upgrade_modal": "If feature not available, show upgrade options"
+      },
+      "image_preview": {
+        "before_upload": "Show preview with dimensions and file size",
+        "after_upload": "Update UI with new Cloudinary URL",
+        "fallback": "Use default images for free plan users"
+      },
+      "color_picker": {
+        "hex_validation": "Validate #RRGGBB format",
+        "live_preview": "Show changes in real-time if possible"
+      },
+      "font_selector": {
+        "dropdown_options": ["Arial", "Helvetica", "Georgia", "Times", "Verdana", "Roboto", "Open Sans", "Lato"],
+        "preview_text": "Show font preview with sample text"
+      }
+    }
+  }

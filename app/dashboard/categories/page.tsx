@@ -10,21 +10,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
-import { Search, Plus, Edit, Trash2, Grid, Loader2, X, Palette } from "lucide-react"
-import { categoriesApi } from "@/lib/api"
+import { Search, Plus, Edit, Trash2, Grid, Loader2, X, Palette, Image as ImageIcon, GripVertical } from "lucide-react"
 import { Category, CreateCategoryRequest, UpdateCategoryRequest } from "@/types/auth"
 import { useAuth } from "@/contexts/AuthContext"
+import { useCategories } from "@/hooks/useCategories"
+import { CategoryImageUpload } from "@/components/category-image-upload"
 
 const colorOptions = [
   "#E63946", "#FFC300", "#06D6A0", "#F72585", "#7209B7",
   "#3A86FF", "#8338EC", "#FF006E", "#FB5607", "#FFBE0B",
-  "#8338EC", "#3A86FF", "#06FFA5", "#FF006E", "#8338EC"
+  "#06FFA5", "#FF6B35", "#4ECDC4", "#45B7D1", "#96CEB4"
 ]
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -36,35 +34,21 @@ export default function CategoriesPage() {
     ordem: 0,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { toast } = useToast()
   const { store } = useAuth()
+  const { 
+    categories, 
+    isLoading, 
+    imageSettings, 
+    isLoadingImageSettings,
+    createCategory, 
+    updateCategory, 
+    deleteCategory,
+    uploadImage,
+    removeImage,
+    reorderCategories
+  } = useCategories()
 
-  // Carregar categorias da API
-  useEffect(() => {
-    const loadCategories = async () => {
-      if (!store?.id) {
-        setLoading(false)
-        return
-      }
-
-      try {
-        setLoading(true)
-        const response = await categoriesApi.getCategories(store.id)
-        setCategories(response.data.categories || [])
-      } catch (error: any) {
-        console.error('Erro ao carregar categorias:', error)
-        toast({
-          title: "Erro",
-          description: error.message || "Erro ao carregar categorias",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadCategories()
-  }, [store?.id, toast])
+  // O hook useCategories já carrega as categorias automaticamente
 
   const filteredCategories = categories.filter(category =>
     category.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,119 +56,55 @@ export default function CategoriesPage() {
   )
 
   const handleCreateCategory = async () => {
-    if (!store?.id) {
-      toast({
-        title: "Erro",
-        description: "Loja não encontrada",
-        variant: "destructive",
-      })
-      return
-    }
-
     if (!formData.nome.trim()) {
-      toast({
-        title: "Erro",
-        description: "Nome da categoria é obrigatório",
-        variant: "destructive",
-      })
       return
     }
 
     setIsSubmitting(true)
     try {
-      const response = await categoriesApi.createCategory(store.id, formData)
-      setCategories(prev => [...prev, response.data.category])
-      setIsCreateModalOpen(false)
-      resetForm()
-      
-      toast({
-        title: "Sucesso",
-        description: response.message || "Categoria criada com sucesso",
-      })
+      const success = await createCategory(formData)
+      if (success) {
+        setIsCreateModalOpen(false)
+        resetForm()
+      }
     } catch (error: any) {
       console.error('Erro ao criar categoria:', error)
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao criar categoria",
-        variant: "destructive",
-      })
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleEditCategory = async () => {
-    if (!store?.id || !editingCategory) {
-      toast({
-        title: "Erro",
-        description: "Loja não encontrada",
-        variant: "destructive",
-      })
+    if (!editingCategory) {
       return
     }
 
     if (!formData.nome.trim()) {
-      toast({
-        title: "Erro",
-        description: "Nome da categoria é obrigatório",
-        variant: "destructive",
-      })
       return
     }
 
     setIsSubmitting(true)
     try {
-      const response = await categoriesApi.updateCategory(store.id, editingCategory.id, formData)
-      setCategories(prev => prev.map(cat => 
-        cat.id === editingCategory.id ? response.data.category : cat
-      ))
-      setIsEditModalOpen(false)
-      setEditingCategory(null)
-      resetForm()
-      
-      toast({
-        title: "Sucesso",
-        description: response.message || "Categoria atualizada com sucesso",
-      })
+      const success = await updateCategory(editingCategory.id, formData)
+      if (success) {
+        setIsEditModalOpen(false)
+        setEditingCategory(null)
+        resetForm()
+      }
     } catch (error: any) {
       console.error('Erro ao atualizar categoria:', error)
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao atualizar categoria",
-        variant: "destructive",
-      })
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
-    if (!store?.id) {
-      toast({
-        title: "Erro",
-        description: "Loja não encontrada",
-        variant: "destructive",
-      })
-      return
-    }
-
     if (!confirm("Tem certeza que deseja excluir esta categoria?")) return
 
     try {
-      await categoriesApi.deleteCategory(store.id, categoryId)
-      setCategories(prev => prev.filter(cat => cat.id !== categoryId))
-      
-      toast({
-        title: "Sucesso",
-        description: "Categoria excluída com sucesso",
-      })
+      await deleteCategory(categoryId)
     } catch (error: any) {
       console.error('Erro ao excluir categoria:', error)
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao excluir categoria",
-        variant: "destructive",
-      })
     }
   }
 
@@ -242,6 +162,19 @@ export default function CategoriesPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Categorias</h1>
               <p className="text-gray-600">Organize seus produtos por categorias</p>
+              {imageSettings && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    {imageSettings.user_plan === 'fomi_simples' ? 'Plano Grátis' : 
+                     imageSettings.user_plan === 'fomi_duplo' ? 'Fomi Duplo' : 'Fomi Supremo'}
+                  </Badge>
+                  {imageSettings.can_upload_images ? (
+                    <span className="text-xs text-green-600">✓ Upload de imagens disponível</span>
+                  ) : (
+                    <span className="text-xs text-yellow-600">⚠ Faça upgrade para upload de imagens</span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-4">
@@ -321,6 +254,22 @@ export default function CategoriesPage() {
                         placeholder="0"
                       />
                     </div>
+                    
+                    {/* Upload de Imagem */}
+                    <div className="grid gap-2">
+                      <Label>Imagem da Categoria</Label>
+                      <CategoryImageUpload
+                        imageSettings={imageSettings}
+                        isLoading={isLoadingImageSettings}
+                        onUpload={async (file) => {
+                          // Para criação, vamos salvar a imagem depois que a categoria for criada
+                          return true
+                        }}
+                        onRemove={async () => {
+                          return true
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="flex justify-end space-x-2">
                     <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
@@ -344,7 +293,7 @@ export default function CategoriesPage() {
         </motion.header>
 
         <main className="flex-1 overflow-auto p-6">
-          {loading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -378,12 +327,20 @@ export default function CategoriesPage() {
                     exit={{ opacity: 0, y: -20 }}
                   >
                     <div className="flex items-start justify-between mb-4">
-                      <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
-                        style={{ backgroundColor: `${category.cor}20` }}
-                      >
-                        🍽️
-                      </div>
+                      {category.imagem_url ? (
+                        <img
+                          src={category.imagem_url}
+                          alt={category.nome}
+                          className="w-12 h-12 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
+                          style={{ backgroundColor: `${category.cor}20` }}
+                        >
+                          🍽️
+                        </div>
+                      )}
                       <Badge className="bg-green-100 text-green-800">
                         Ativa
                       </Badge>
@@ -413,6 +370,17 @@ export default function CategoriesPage() {
                         <Edit size={16} className="mr-2" />
                         Editar
                       </Button>
+                      {imageSettings?.can_upload_images && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="bg-transparent"
+                          onClick={() => openEditModal(category)}
+                          title="Gerenciar imagem"
+                        >
+                          <ImageIcon size={16} />
+                        </Button>
+                      )}
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -490,6 +458,28 @@ export default function CategoriesPage() {
                 value={formData.ordem}
                 onChange={(e) => setFormData(prev => ({ ...prev, ordem: parseInt(e.target.value) || 0 }))}
                 placeholder="0"
+              />
+            </div>
+            
+            {/* Upload de Imagem */}
+            <div className="grid gap-2">
+              <Label>Imagem da Categoria</Label>
+              <CategoryImageUpload
+                currentImageUrl={editingCategory?.imagem_url}
+                imageSettings={imageSettings}
+                isLoading={isLoadingImageSettings}
+                onUpload={async (file) => {
+                  if (editingCategory) {
+                    return await uploadImage(editingCategory.id, file)
+                  }
+                  return false
+                }}
+                onRemove={async () => {
+                  if (editingCategory) {
+                    return await removeImage(editingCategory.id)
+                  }
+                  return false
+                }}
               />
             </div>
           </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, ShoppingBag, Users, Settings, ChevronLeft, Store, Package, CreditCard } from "lucide-react"
+import { Home, ShoppingBag, Users, Settings, ChevronLeft, Store, Package, CreditCard, Tag } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +20,7 @@ export function SidebarMenu() {
     { icon: ShoppingBag, label: "Pedidos", href: "/dashboard/orders" },
     { icon: Package, label: "Produtos", href: "/dashboard/products" },
     { icon: Store, label: "Categorias", href: "/dashboard/categories" },
+    { icon: Tag, label: "Promoções", href: "/dashboard/promotions" },
     { icon: CreditCard, label: "Cupons", href: "/dashboard/coupons" },
     { icon: Users, label: "Clientes", href: "/dashboard/customers" },
     { icon: Store, label: "Loja", href: "/dashboard/store" },
@@ -136,7 +137,7 @@ export function SidebarMenu() {
           whileHover={{ scale: 1.02 }}
         >
           <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold text-sm">{user?.nome?.split(' ').map(n => n[0]).join('') || 'U'}</span>
+            <span className="text-white font-semibold text-sm">{user?.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}</span>
           </div>
           <AnimatePresence>
             {isExpanded && (
@@ -147,7 +148,7 @@ export function SidebarMenu() {
                 transition={{ duration: 0.2 }}
                 className="flex-1"
               >
-                <p className="font-medium text-gray-900">{user?.nome || 'Usuário'}</p>
+                <p className="font-medium text-gray-900">{user?.name || 'Usuário'}</p>
                 <Badge className={`text-xs ${planInfo.color}`}>
                   {planInfo.name}
                 </Badge>

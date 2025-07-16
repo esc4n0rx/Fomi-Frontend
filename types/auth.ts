@@ -55,9 +55,11 @@ export interface ErrorResponse {
 
 export interface Category {
   id: string;
+  store_id: string;
   nome: string;
   descricao?: string;
   cor?: string;
+  imagem_url?: string;
   ordem: number;
   created_at: string;
   updated_at: string;
@@ -77,8 +79,56 @@ export interface UpdateCategoryRequest {
   ordem?: number;
 }
 
+export interface CategoryImageSettings {
+  can_upload_images: boolean;
+  user_plan: string;
+  specifications: {
+    dimensions: string;
+    formats: string[];
+    max_size: string;
+    aspect_ratio: string;
+  };
+  upgrade_message?: string;
+}
+
+export interface ProductImageSettings {
+  can_upload_images: boolean;
+  user_plan: string;
+  specifications: {
+    main_image: {
+      dimensions: string;
+      formats: string[];
+      max_size: string;
+      aspect_ratio: string;
+    };
+    extra_images: {
+      max_count: number;
+      same_specs: string;
+    };
+  };
+  upgrade_message?: string;
+}
+
+export interface ReorderCategoriesRequest {
+  categories: Array<{
+    id: string;
+    ordem: number;
+  }>;
+}
+
+export interface CategoryImageUploadResponse {
+  success: boolean;
+  message: string;
+  data: {
+    category: Category;
+    imagem_url: string;
+  };
+}
+
 export interface Product {
   id: string;
+  store_id: string;
+  category_id?: string;
   nome: string;
   descricao?: string;
   preco: number;
@@ -94,6 +144,7 @@ export interface Product {
   alergicos?: string[];
   tempo_preparo_min?: number;
   imagem_url?: string;
+  imagens_extras?: string[];
   ordem?: number;
   created_at: string;
   updated_at: string;
@@ -127,4 +178,13 @@ export interface UpdateProductRequest {
   destaque?: boolean;
   imagem_url?: string;
   ordem?: number;
+}
+
+export interface ProductLimits {
+  current: number;
+  limit: number;
+  plan: string;
+  can_upload_images: boolean;
+  max_extra_images?: number;
+  upgrade_message?: string;
 }

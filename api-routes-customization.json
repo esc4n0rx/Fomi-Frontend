@@ -1,0 +1,432 @@
+{
+    "store_customization": {
+      "endpoints": {
+        "get_store_data": {
+          "method": "GET",
+          "url": "/api/v1/stores/{storeId}",
+          "description": "Busca dados básicos da loja",
+          "headers": {
+            "Authorization": "Bearer {token}"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "store": {
+                "id": "uuid",
+                "nome": "Minha Lanchonete",
+                "slug": "minha-lanchonete",
+                "descricao": "A melhor lanchonete da cidade",
+                "whatsapp": "(11) 99999-9999",
+                "instagram": "@minhalanchonete",
+                "facebook": "minhalanchonete",
+                "endereco_cep": "01234-567",
+                "endereco_rua": "Rua das Flores",
+                "endereco_numero": "123",
+                "endereco_complemento": "Sala 1",
+                "endereco_bairro": "Centro",
+                "endereco_cidade": "São Paulo",
+                "endereco_estado": "SP",
+                "logo_url": "https://res.cloudinary.com/...",
+                "banner_url": "https://res.cloudinary.com/...",
+                "cor_primaria": "#FF6B35",
+                "cor_secundaria": "#F7931E",
+                "cor_texto": "#333333",
+                "cor_fundo": "#FFFFFF",
+                "fonte_titulo": "Roboto",
+                "fonte_texto": "Arial",
+                "plano": "fomi_duplo",
+                "created_at": "2025-01-01T00:00:00Z",
+                "updated_at": "2025-01-01T00:00:00Z"
+              }
+            }
+          }
+        },
+        "get_customization_settings": {
+          "method": "GET",
+          "url": "/api/v1/stores/{storeId}/customization-settings",
+          "description": "Busca configurações e permissões de personalização",
+          "headers": {
+            "Authorization": "Bearer {token}"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "store": {
+                "id": "uuid",
+                "nome": "Minha Lanchonete",
+                "slug": "minha-lanchonete",
+                "logo_url": "https://res.cloudinary.com/...",
+                "banner_url": "https://res.cloudinary.com/...",
+                "cor_primaria": "#FF6B35",
+                "cor_secundaria": "#F7931E",
+                "cor_texto": "#333333",
+                "cor_fundo": "#FFFFFF",
+                "fonte_titulo": "Roboto",
+                "fonte_texto": "Arial"
+              },
+              "user_plan": "fomi_duplo",
+              "permissions": {
+                "logo_upload": true,
+                "banner_upload": true,
+                "custom_colors": true,
+                "custom_fonts": true,
+                "product_images": true,
+                "category_images": true
+              },
+              "limits": {
+                "stores": 1,
+                "products_per_store": 50,
+                "categories_per_store": 15,
+                "promotions_active": 5
+              },
+              "allowed_uploads": ["logo", "banner", "product_image", "category_image"],
+              "available_customizations": {
+                "colors": {
+                  "available": true,
+                  "current": {
+                    "cor_primaria": "#FF6B35",
+                    "cor_secundaria": "#F7931E",
+                    "cor_texto": "#333333",
+                    "cor_fundo": "#FFFFFF"
+                  },
+                  "options": [
+                    {
+                      "name": "Cor Primária",
+                      "key": "cor_primaria",
+                      "description": "Cor principal da loja"
+                    },
+                    {
+                      "name": "Cor Secundária",
+                      "key": "cor_secundaria",
+                      "description": "Cor para destaques"
+                    },
+                    {
+                      "name": "Cor do Texto",
+                      "key": "cor_texto",
+                      "description": "Cor dos textos"
+                    },
+                    {
+                      "name": "Cor do Fundo",
+                      "key": "cor_fundo",
+                      "description": "Cor de fundo da loja"
+                    }
+                  ]
+                },
+                "fonts": {
+                  "available": true,
+                  "current": {
+                    "fonte_titulo": "Roboto",
+                    "fonte_texto": "Arial"
+                  },
+                  "options": ["Arial", "Helvetica", "Georgia", "Times", "Verdana", "Roboto", "Open Sans", "Lato"]
+                },
+                "images": {
+                  "logo": {
+                    "available": true,
+                    "current_url": "https://res.cloudinary.com/...",
+                    "specifications": {
+                      "dimensions": "100x100 até 512x512px",
+                      "formats": ["JPEG", "PNG", "WebP"],
+                      "max_size": "2MB"
+                    }
+                  },
+                  "banner": {
+                    "available": true,
+                    "current_url": "https://res.cloudinary.com/...",
+                    "specifications": {
+                      "dimensions": "800x200 até 1920x600px",
+                      "formats": ["JPEG", "PNG", "WebP"],
+                      "max_size": "5MB"
+                    }
+                  }
+                }
+              },
+              "upgrade_required": false,
+              "upgrade_messages": {
+                "banner_upload": "Faça upgrade para adicionar um banner personalizado",
+                "custom_colors": "Faça upgrade para personalizar as cores da sua loja",
+                "custom_fonts": "Faça upgrade para escolher fontes personalizadas"
+              }
+            }
+          }
+        },
+        "update_basic_info": {
+          "method": "PUT",
+          "url": "/api/v1/stores/{storeId}",
+          "description": "Atualiza informações básicas da loja",
+          "headers": {
+            "Authorization": "Bearer {token}",
+            "Content-Type": "application/json"
+          },
+          "payload": {
+            "nome": "Nova Lanchonete",
+            "descricao": "Descrição atualizada",
+            "whatsapp": "(11) 88888-8888",
+            "instagram": "@novalanchonete",
+            "facebook": "novalanchonete",
+            "endereco_cep": "12345-678",
+            "endereco_rua": "Rua Nova",
+            "endereco_numero": "456",
+            "endereco_complemento": "Loja 2",
+            "endereco_bairro": "Vila Nova",
+            "endereco_cidade": "Rio de Janeiro",
+            "endereco_estado": "RJ"
+          },
+          "validation": {
+            "nome": "2-255 caracteres, obrigatório",
+            "descricao": "máximo 1000 caracteres, opcional",
+            "whatsapp": "formato brasileiro válido, opcional",
+            "endereco_cep": "formato 00000-000, opcional",
+            "endereco_estado": "2 caracteres maiúsculos, opcional"
+          }
+        },
+        "update_customization": {
+          "method": "PATCH",
+          "url": "/api/v1/stores/{storeId}/customization",
+          "description": "Atualiza personalização visual da loja",
+          "headers": {
+            "Authorization": "Bearer {token}",
+            "Content-Type": "application/json"
+          },
+          "payload": {
+            "cor_primaria": "#2563EB",
+            "cor_secundaria": "#1D4ED8",
+            "cor_texto": "#1F2937",
+            "cor_fundo": "#F9FAFB",
+            "fonte_titulo": "Georgia",
+            "fonte_texto": "Open Sans"
+          },
+          "validation": {
+            "cor_primaria": "Hex format #RRGGBB",
+            "cor_secundaria": "Hex format #RRGGBB",
+            "cor_texto": "Hex format #RRGGBB",
+            "cor_fundo": "Hex format #RRGGBB",
+            "fonte_titulo": "Uma das opções: Arial, Helvetica, Georgia, Times, Verdana, Roboto, Open Sans, Lato",
+            "fonte_texto": "Uma das opções: Arial, Helvetica, Georgia, Times, Verdana, Roboto, Open Sans, Lato"
+          },
+          "plan_requirements": {
+            "fomi_simples": false,
+            "fomi_duplo": true,
+            "fomi_supremo": true
+          }
+        },
+        "upload_logo": {
+          "method": "POST",
+          "url": "/api/v1/stores/{storeId}/logo",
+          "description": "Faz upload do logo da loja",
+          "headers": {
+            "Authorization": "Bearer {token}",
+            "Content-Type": "multipart/form-data"
+          },
+          "payload": {
+            "logo": "file"
+          },
+          "specifications": {
+            "dimensions": {
+              "min_width": 100,
+              "max_width": 512,
+              "min_height": 100,
+              "max_height": 512
+            },
+            "file": {
+              "max_size": "2MB",
+              "formats": ["image/jpeg", "image/png", "image/webp"]
+            },
+            "aspect_ratio": "0.5 - 2.0 (quadrado ou próximo)"
+          },
+          "plan_requirements": {
+            "fomi_simples": true,
+            "fomi_duplo": true,
+            "fomi_supremo": true
+          }
+        },
+        "upload_banner": {
+          "method": "POST",
+          "url": "/api/v1/stores/{storeId}/banner",
+          "description": "Faz upload do banner da loja",
+          "headers": {
+            "Authorization": "Bearer {token}",
+            "Content-Type": "multipart/form-data"
+          },
+          "payload": {
+            "banner": "file"
+          },
+          "specifications": {
+            "dimensions": {
+              "min_width": 800,
+              "max_width": 1920,
+              "min_height": 200,
+              "max_height": 600
+            },
+            "file": {
+              "max_size": "5MB",
+              "formats": ["image/jpeg", "image/png", "image/webp"]
+            },
+            "aspect_ratio": "2.0 - 6.0 (formato banner)"
+          },
+          "plan_requirements": {
+            "fomi_simples": false,
+            "fomi_duplo": true,
+            "fomi_supremo": true
+          }
+        },
+        "remove_logo": {
+          "method": "DELETE",
+          "url": "/api/v1/stores/{storeId}/logo",
+          "description": "Remove logo da loja",
+          "headers": {
+            "Authorization": "Bearer {token}"
+          }
+        },
+        "remove_banner": {
+          "method": "DELETE",
+          "url": "/api/v1/stores/{storeId}/banner",
+          "description": "Remove banner da loja",
+          "headers": {
+            "Authorization": "Bearer {token}"
+          }
+        },
+        "get_templates": {
+          "method": "GET",
+          "url": "/api/v1/stores/{storeId}/customization-templates",
+          "description": "Busca templates de personalização prontos",
+          "headers": {
+            "Authorization": "Bearer {token}"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "templates": [
+                {
+                  "id": "moderno",
+                  "name": "Moderno",
+                  "description": "Design clean e minimalista",
+                  "preview_image": "/templates/moderno.jpg",
+                  "available": true,
+                  "customization": {
+                    "cor_primaria": "#2563EB",
+                    "cor_secundaria": "#1D4ED8",
+                    "cor_texto": "#1F2937",
+                    "cor_fundo": "#FFFFFF",
+                    "fonte_titulo": "Roboto",
+                    "fonte_texto": "Open Sans"
+                  }
+                }
+              ],
+              "user_plan": "fomi_duplo",
+              "templates_available": true,
+              "upgrade_message": null
+            }
+          }
+        },
+        "apply_template": {
+          "method": "POST",
+          "url": "/api/v1/stores/{storeId}/apply-template",
+          "description": "Aplica template de personalização",
+          "headers": {
+            "Authorization": "Bearer {token}",
+            "Content-Type": "application/json"
+          },
+          "payload": {
+            "templateId": "moderno"
+          }
+        },
+        "preview_customization": {
+          "method": "POST",
+          "url": "/api/v1/stores/{storeId}/preview-customization",
+          "description": "Preview de personalização sem salvar",
+          "headers": {
+            "Authorization": "Bearer {token}",
+            "Content-Type": "application/json"
+          },
+          "payload": {
+            "cor_primaria": "#2563EB",
+            "cor_secundaria": "#1D4ED8",
+            "fonte_titulo": "Georgia"
+          }
+        },
+        "reset_customization": {
+          "method": "POST",
+          "url": "/api/v1/stores/{storeId}/reset-customization",
+          "description": "Reset personalização para padrões",
+          "headers": {
+            "Authorization": "Bearer {token}"
+          }
+        }
+      },
+      "error_responses": {
+        "plan_restriction": {
+          "status": 403,
+          "body": {
+            "success": false,
+            "message": "Personalização visual não disponível no plano fomi_simples",
+            "upgrade_required": true,
+            "current_plan": "fomi_simples",
+            "required_plans": ["fomi_duplo", "fomi_supremo"]
+          }
+        },
+        "invalid_image_format": {
+          "status": 400,
+          "body": {
+            "success": false,
+            "message": "Formato não suportado. Use: jpeg, jpg, png, webp"
+          }
+        },
+        "invalid_image_dimensions": {
+          "status": 400,
+          "body": {
+            "success": false,
+            "message": "Largura deve estar entre 100px e 512px"
+          }
+        },
+        "file_too_large": {
+          "status": 400,
+          "body": {
+            "success": false,
+            "message": "Arquivo muito grande. Máximo 2MB para logo"
+          }
+        },
+        "invalid_color_format": {
+          "status": 400,
+          "body": {
+            "success": false,
+            "message": "Cor primária deve ser hex válida",
+            "errors": [
+              {
+                "field": "cor_primaria",
+                "message": "Cor primária deve ser hex válida"
+              }
+            ]
+          }
+        },
+        "store_not_found": {
+          "status": 404,
+          "body": {
+            "success": false,
+            "message": "Loja não encontrada ou acesso negado"
+          }
+        }
+      },
+      "plan_limitations": {
+        "fomi_simples": {
+          "allowed_features": ["logo_upload"],
+          "restricted_features": ["banner_upload", "custom_colors", "custom_fonts"],
+          "upgrade_messages": {
+            "banner": "Faça upgrade para adicionar um banner personalizado",
+            "colors": "Faça upgrade para personalizar as cores da sua loja",
+            "fonts": "Faça upgrade para escolher fontes personalizadas"
+          }
+        },
+        "fomi_duplo": {
+          "allowed_features": ["logo_upload", "banner_upload", "custom_colors", "custom_fonts", "product_images", "category_images"],
+          "restricted_features": [],
+          "upgrade_messages": {}
+        },
+        "fomi_supremo": {
+          "allowed_features": ["all"],
+          "restricted_features": [],
+          "upgrade_messages": {}
+        }
+      }
+    }
+  }

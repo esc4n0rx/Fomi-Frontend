@@ -1,22 +1,166 @@
 "use client"
 
-import { SidebarMenu } from "@/components/sidebar-menu"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { Store, Clock, MapPin, Phone, Mail, Globe, Camera } from "lucide-react"
-import { MobileStorePreview } from "@/components/mobile-store-preview"
+import { useState, useEffect } from 'react';
+import { SidebarMenu } from "@/components/sidebar-menu";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Store, 
+  Palette, 
+  Type, 
+  Camera, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Globe, 
+  Clock,
+  Save,
+  RotateCcw,
+  Eye,
+  Sparkles,
+  Crown,
+  AlertCircle
+} from "lucide-react";
+import { useStoreCustomization } from "@/hooks/useStoreCustomization";
+import { StoreImageUpload } from "@/components/store-image-upload";
+import { StorePreview } from "@/components/store-preview";
+import { ColorPicker } from "@/components/color-picker";
+import { FontSelector } from "@/components/font-selector";
+import { CustomizationTemplates } from "@/components/customization-templates";
+import { toast } from "@/hooks/use-toast";
 
 export default function StorePage() {
+  const {
+    store,
+    settings,
+    templates,
+    loading,
+    loadingSettings,
+    loadingTemplates,
+    saving,
+    uploading,
+    basicInfo,
+    customization,
+    previewCustomization,
+    loadStore,
+    loadSettings,
+    loadTemplates,
+    updateBasicInfo,
+    updateCustomization,
+    uploadLogo,
+    uploadBanner,
+    removeLogo,
+    removeBanner,
+    applyTemplate,
+    previewCustomizationChanges,
+    resetCustomization,
+    hasPermission,
+    getUpgradeMessage,
+  } = useStoreCustomization();
+
+  const [activeTab, setActiveTab] = useState("basic");
+  const [formData, setFormData] = useState(basicInfo);
+  const [customizationData, setCustomizationData] = useState(customization);
+
+  // Update form data when store data loads
+  useEffect(() => {
+    if (store) {
+      setFormData({
+        nome: store.nome || '',
+        descricao: store.descricao || '',
+        whatsapp: store.whatsapp || '',
+        instagram: store.instagram || '',
+        facebook: store.facebook || '',
+        endereco_cep: store.endereco_cep || '',
+        endereco_rua: store.endereco_rua || '',
+        endereco_numero: store.endereco_numero || '',
+        endereco_complemento: store.endereco_complemento || '',
+        endereco_bairro: store.endereco_bairro || '',
+        endereco_cidade: store.endereco_cidade || '',
+        endereco_estado: store.endereco_estado || '',
+      });
+      setCustomizationData({
+        cor_primaria: store.cor_primaria || '#FF6B35',
+        cor_secundaria: store.cor_secundaria || '#F7931E',
+        cor_texto: store.cor_texto || '#333333',
+        cor_fundo: store.cor_fundo || '#FFFFFF',
+        fonte_titulo: store.fonte_titulo || 'Roboto',
+        fonte_texto: store.fonte_texto || 'Arial',
+      });
+    }
+  }, [store]);
+
+  // Update customization data when customization changes
+  useEffect(() => {
+    setCustomizationData(customization);
+  }, [customization]);
+
+  const handleBasicInfoChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCustomizationChange = (field: string, value: string) => {
+    const newCustomization = { ...customizationData, [field]: value };
+    setCustomizationData(newCustomization);
+    
+    // Generate preview in real-time
+    previewCustomizationChanges(newCustomization);
+  };
+
+  const handleSaveBasicInfo = async () => {
+    await updateBasicInfo(formData);
+  };
+
+  const handleSaveCustomization = async () => {
+    await updateCustomization(customizationData);
+  };
+
+  const handlePreviewTemplate = (templateCustomization: any) => {
+    setCustomizationData(templateCustomization);
+    previewCustomizationChanges(templateCustomization);
+  };
+
+  const handleResetCustomization = async () => {
+    if (confirm('Tem certeza que deseja resetar a personalização para os padrões?')) {
+      await resetCustomization();
+    }
+  };
+
+  const currentCustomization = previewCustomization || customizationData;
+  const displayStore = {
+    nome: store?.nome || formData.nome || 'Minha Loja',
+    descricao: store?.descricao || formData.descricao || '',
+    logo_url: store?.logo_url,
+    banner_url: store?.banner_url,
+  };
+
+  if (loading || loadingSettings) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <SidebarMenu />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-gray-600">Carregando configurações da loja...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <SidebarMenu />
 
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
         <motion.header
           className="bg-white border-b border-gray-200 px-6 py-4"
           initial={{ opacity: 0, y: -20 }}
@@ -25,188 +169,389 @@ export default function StorePage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Configurações da Loja</h1>
-              <p className="text-gray-600">Personalize as informações da sua loja</p>
+              <h1 className="text-2xl font-bold text-gray-900">Personalização da Loja</h1>
+              <p className="text-gray-600">Configure a aparência e informações da sua loja</p>
             </div>
 
             <div className="flex items-center space-x-4">
-              <Badge className="bg-green-100 text-green-800">Loja Online</Badge>
-              <Button className="bg-primary hover:bg-primary/90">Salvar Alterações</Button>
+              {store?.plano && (
+                <Badge 
+                  variant={store.plano === 'fomi_simples' ? 'secondary' : 'default'}
+                  className="flex items-center gap-1"
+                >
+                  {store.plano === 'fomi_simples' ? (
+                    <>
+                      <Crown className="h-3 w-3" />
+                      Plano Simples
+                    </>
+                  ) : store.plano === 'fomi_duplo' ? (
+                    <>
+                      <Crown className="h-3 w-3" />
+                      Plano Duplo
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-3 w-3" />
+                      Plano Supremo
+                    </>
+                  )}
+                </Badge>
+              )}
+              
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleResetCustomization}
+                  disabled={saving || !hasPermission('custom_colors')}
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Resetar
+                </Button>
+                <Button
+                  onClick={handleSaveCustomization}
+                  disabled={saving || !hasPermission('custom_colors')}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </div>
             </div>
           </div>
         </motion.header>
 
         <main className="flex-1 overflow-auto p-6">
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Left Column - Store Configuration */}
+            {/* Left Column - Configuration */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Informações Básicas */}
-              <motion.div
-                className="bg-white rounded-xl border border-gray-200 p-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-              >
-                <div className="flex items-center space-x-2 mb-6">
-                  <Store size={24} className="text-primary" />
-                  <h2 className="text-xl font-semibold">Informações Básicas</h2>
-                </div>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="basic">Informações</TabsTrigger>
+                  <TabsTrigger value="visual">Visual</TabsTrigger>
+                  <TabsTrigger value="images">Imagens</TabsTrigger>
+                  <TabsTrigger value="templates">Templates</TabsTrigger>
+                </TabsList>
 
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="storeName">Nome da Loja</Label>
-                    <Input id="storeName" defaultValue="Lanchonete do João" className="mt-1" />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="storeDescription">Descrição</Label>
-                    <Textarea
-                      id="storeDescription"
-                      defaultValue="Os melhores lanches da região com ingredientes frescos e sabor incomparável!"
-                      className="mt-1"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="storeCategory">Categoria</Label>
-                    <Input id="storeCategory" defaultValue="Lanchonete" className="mt-1" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="minOrder">Pedido Mínimo</Label>
-                      <Input id="minOrder" defaultValue="R$ 15,00" className="mt-1" />
-                    </div>
-                    <div>
-                      <Label htmlFor="deliveryFee">Taxa de Entrega</Label>
-                      <Input id="deliveryFee" defaultValue="R$ 5,00" className="mt-1" />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Logo e Imagens */}
-              <motion.div
-                className="bg-white rounded-xl border border-gray-200 p-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                <div className="flex items-center space-x-2 mb-6">
-                  <Camera size={24} className="text-primary" />
-                  <h2 className="text-xl font-semibold">Logo e Imagens</h2>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <Label>Logo da Loja</Label>
-                    <div className="mt-2 flex items-center space-x-4">
-                      <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-2xl">J</span>
-                      </div>
-                      <Button variant="outline">Alterar Logo</Button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Banner da Loja</Label>
-                    <div className="mt-2">
-                      <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-                        <div className="text-center">
-                          <Camera size={32} className="text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">Clique para adicionar banner</p>
+                {/* Basic Information Tab */}
+                <TabsContent value="basic" className="space-y-6">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                  >
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Store className="h-5 w-5" />
+                          Informações Básicas
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <Label htmlFor="nome">Nome da Loja *</Label>
+                          <Input
+                            id="nome"
+                            value={formData.nome}
+                            onChange={(e) => handleBasicInfoChange('nome', e.target.value)}
+                            placeholder="Ex: Lanchonete do João"
+                          />
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
 
-              {/* Contato e Localização */}
-              <motion.div
-                className="bg-white rounded-xl border border-gray-200 p-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-              >
-                <div className="flex items-center space-x-2 mb-6">
-                  <MapPin size={24} className="text-primary" />
-                  <h2 className="text-xl font-semibold">Contato e Localização</h2>
-                </div>
+                        <div>
+                          <Label htmlFor="descricao">Descrição</Label>
+                          <Textarea
+                            id="descricao"
+                            value={formData.descricao}
+                            onChange={(e) => handleBasicInfoChange('descricao', e.target.value)}
+                            placeholder="Descreva sua loja..."
+                            rows={3}
+                          />
+                        </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="address">Endereço Completo</Label>
-                    <Input id="address" defaultValue="Rua das Flores, 123 - Centro" className="mt-1" />
-                  </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label htmlFor="whatsapp">WhatsApp</Label>
+                            <Input
+                              id="whatsapp"
+                              value={formData.whatsapp}
+                              onChange={(e) => handleBasicInfoChange('whatsapp', e.target.value)}
+                              placeholder="(11) 99999-9999"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="instagram">Instagram</Label>
+                            <Input
+                              id="instagram"
+                              value={formData.instagram}
+                              onChange={(e) => handleBasicInfoChange('instagram', e.target.value)}
+                              placeholder="@minhaloja"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="facebook">Facebook</Label>
+                            <Input
+                              id="facebook"
+                              value={formData.facebook}
+                              onChange={(e) => handleBasicInfoChange('facebook', e.target.value)}
+                              placeholder="minhaloja"
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="phone">Telefone</Label>
-                      <div className="relative mt-1">
-                        <Phone size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <Input id="phone" defaultValue="(11) 99999-9999" className="pl-10" />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email</Label>
-                      <div className="relative mt-1">
-                        <Mail size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <Input id="email" defaultValue="contato@loja.com" className="pl-10" />
-                      </div>
-                    </div>
-                  </div>
+                    <Card className="mt-6">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <MapPin className="h-5 w-5" />
+                          Endereço
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="cep">CEP</Label>
+                            <Input
+                              id="cep"
+                              value={formData.endereco_cep}
+                              onChange={(e) => handleBasicInfoChange('endereco_cep', e.target.value)}
+                              placeholder="00000-000"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="estado">Estado</Label>
+                            <Input
+                              id="estado"
+                              value={formData.endereco_estado}
+                              onChange={(e) => handleBasicInfoChange('endereco_estado', e.target.value)}
+                              placeholder="SP"
+                              maxLength={2}
+                            />
+                          </div>
+                        </div>
 
-                  <div>
-                    <Label htmlFor="website">Website (opcional)</Label>
-                    <div className="relative mt-1">
-                      <Globe size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                      <Input id="website" placeholder="https://meusite.com" className="pl-10" />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+                        <div>
+                          <Label htmlFor="rua">Rua</Label>
+                          <Input
+                            id="rua"
+                            value={formData.endereco_rua}
+                            onChange={(e) => handleBasicInfoChange('endereco_rua', e.target.value)}
+                            placeholder="Rua das Flores"
+                          />
+                        </div>
 
-              {/* Horário de Funcionamento */}
-              <motion.div
-                className="bg-white rounded-xl border border-gray-200 p-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <div className="flex items-center space-x-2 mb-6">
-                  <Clock size={24} className="text-primary" />
-                  <h2 className="text-xl font-semibold">Horário de Funcionamento</h2>
-                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label htmlFor="numero">Número</Label>
+                            <Input
+                              id="numero"
+                              value={formData.endereco_numero}
+                              onChange={(e) => handleBasicInfoChange('endereco_numero', e.target.value)}
+                              placeholder="123"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="complemento">Complemento</Label>
+                            <Input
+                              id="complemento"
+                              value={formData.endereco_complemento}
+                              onChange={(e) => handleBasicInfoChange('endereco_complemento', e.target.value)}
+                              placeholder="Sala 1"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="bairro">Bairro</Label>
+                            <Input
+                              id="bairro"
+                              value={formData.endereco_bairro}
+                              onChange={(e) => handleBasicInfoChange('endereco_bairro', e.target.value)}
+                              placeholder="Centro"
+                            />
+                          </div>
+                        </div>
 
-                <div className="space-y-4">
-                  {[
-                    { day: "Segunda-feira", open: "08:00", close: "22:00", active: true },
-                    { day: "Terça-feira", open: "08:00", close: "22:00", active: true },
-                    { day: "Quarta-feira", open: "08:00", close: "22:00", active: true },
-                    { day: "Quinta-feira", open: "08:00", close: "22:00", active: true },
-                    { day: "Sexta-feira", open: "08:00", close: "23:00", active: true },
-                    { day: "Sábado", open: "09:00", close: "23:00", active: true },
-                    { day: "Domingo", open: "10:00", close: "21:00", active: false },
-                  ].map((schedule) => (
-                    <div key={schedule.day} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Switch checked={schedule.active} />
-                        <span className="font-medium w-24">{schedule.day}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Input value={schedule.open} className="w-20 text-center" disabled={!schedule.active} />
-                        <span>às</span>
-                        <Input value={schedule.close} className="w-20 text-center" disabled={!schedule.active} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
+                        <div>
+                          <Label htmlFor="cidade">Cidade</Label>
+                          <Input
+                            id="cidade"
+                            value={formData.endereco_cidade}
+                            onChange={(e) => handleBasicInfoChange('endereco_cidade', e.target.value)}
+                            placeholder="São Paulo"
+                          />
+                        </div>
+
+                        <Button onClick={handleSaveBasicInfo} disabled={saving} className="w-full">
+                          <Save className="h-4 w-4 mr-2" />
+                          {saving ? 'Salvando...' : 'Salvar Informações'}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </TabsContent>
+
+                {/* Visual Customization Tab */}
+                <TabsContent value="visual" className="space-y-6">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                  >
+                    {!hasPermission('custom_colors') && (
+                      <Card className="border-orange-200 bg-orange-50">
+                        <CardContent className="pt-6">
+                          <div className="flex items-center gap-2 text-orange-800 mb-2">
+                            <AlertCircle className="h-5 w-5" />
+                            <span className="font-medium">Personalização não disponível</span>
+                          </div>
+                          <p className="text-orange-700 text-sm">
+                            {getUpgradeMessage('custom_colors') || 'Faça upgrade do seu plano para personalizar as cores da sua loja'}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Palette className="h-5 w-5" />
+                          Cores da Loja
+                        </CardTitle>
+                        <p className="text-sm text-gray-600">
+                          Personalize as cores principais da sua loja
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <ColorPicker
+                            value={customizationData.cor_primaria}
+                            onChange={(color) => handleCustomizationChange('cor_primaria', color)}
+                            label="Cor Primária"
+                            description="Cor principal da loja (botões, links, destaques)"
+                            disabled={!hasPermission('custom_colors')}
+                          />
+                          
+                          <ColorPicker
+                            value={customizationData.cor_secundaria}
+                            onChange={(color) => handleCustomizationChange('cor_secundaria', color)}
+                            label="Cor Secundária"
+                            description="Cor para elementos secundários e gradientes"
+                            disabled={!hasPermission('custom_colors')}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <ColorPicker
+                            value={customizationData.cor_texto}
+                            onChange={(color) => handleCustomizationChange('cor_texto', color)}
+                            label="Cor do Texto"
+                            description="Cor principal dos textos da loja"
+                            disabled={!hasPermission('custom_colors')}
+                          />
+                          
+                          <ColorPicker
+                            value={customizationData.cor_fundo}
+                            onChange={(color) => handleCustomizationChange('cor_fundo', color)}
+                            label="Cor de Fundo"
+                            description="Cor de fundo principal da loja"
+                            disabled={!hasPermission('custom_colors')}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Type className="h-5 w-5" />
+                          Fontes da Loja
+                        </CardTitle>
+                        <p className="text-sm text-gray-600">
+                          Escolha as fontes para títulos e textos
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FontSelector
+                            value={customizationData.fonte_titulo}
+                            onChange={(font) => handleCustomizationChange('fonte_titulo', font)}
+                            label="Fonte dos Títulos"
+                            description="Fonte usada em títulos, cabeçalhos e destaques"
+                            disabled={!hasPermission('custom_fonts')}
+                          />
+                          
+                          <FontSelector
+                            value={customizationData.fonte_texto}
+                            onChange={(font) => handleCustomizationChange('fonte_texto', font)}
+                            label="Fonte do Texto"
+                            description="Fonte usada em textos, descrições e conteúdo"
+                            disabled={!hasPermission('custom_fonts')}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </TabsContent>
+
+                {/* Images Tab */}
+                <TabsContent value="images" className="space-y-6">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="space-y-6"
+                  >
+                                         <StoreImageUpload
+                       type="logo"
+                       currentUrl={store?.logo_url}
+                       onUpload={uploadLogo}
+                       onRemove={removeLogo}
+                       uploading={uploading}
+                       hasPermission={hasPermission('logo_upload')}
+                       upgradeMessage={getUpgradeMessage('logo_upload')}
+                       specifications={{
+                         dimensions: "100x100 até 512x512px",
+                         formats: ["JPEG", "PNG", "WebP"],
+                         max_size: "2MB"
+                       }}
+                     />
+
+                     <StoreImageUpload
+                       type="banner"
+                       currentUrl={store?.banner_url}
+                       onUpload={uploadBanner}
+                       onRemove={removeBanner}
+                       uploading={uploading}
+                       hasPermission={hasPermission('banner_upload')}
+                       upgradeMessage={getUpgradeMessage('banner_upload')}
+                       specifications={{
+                         dimensions: "800x200 até 1920x600px",
+                         formats: ["JPEG", "PNG", "WebP"],
+                         max_size: "5MB"
+                       }}
+                     />
+                  </motion.div>
+                </TabsContent>
+
+                {/* Templates Tab */}
+                <TabsContent value="templates" className="space-y-6">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                  >
+                    <CustomizationTemplates
+                      templates={templates}
+                      onApplyTemplate={applyTemplate}
+                      onPreviewTemplate={handlePreviewTemplate}
+                      loading={saving}
+                      hasPermission={hasPermission('custom_colors')}
+                      upgradeMessage={getUpgradeMessage('custom_colors')}
+                    />
+                  </motion.div>
+                </TabsContent>
+              </Tabs>
             </div>
 
-            {/* Right Column - Mobile Preview */}
+            {/* Right Column - Preview */}
             <div className="lg:col-span-1">
               <motion.div
                 className="sticky top-6"
@@ -214,18 +559,19 @@ export default function StorePage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
               >
-                <div className="text-center mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">Sua loja ficará assim</h2>
-                  <p className="text-gray-600">Preview em tempo real no mobile</p>
-                </div>
-                <div className="flex justify-center">
-                  <MobileStorePreview />
-                </div>
+                <StorePreview
+                  storeName={displayStore.nome}
+                  storeDescription={displayStore.descricao}
+                  logoUrl={displayStore.logo_url}
+                  bannerUrl={displayStore.banner_url}
+                  customization={currentCustomization}
+                  isPreview={!!previewCustomization}
+                />
               </motion.div>
             </div>
           </div>
         </main>
       </div>
     </div>
-  )
+  );
 }

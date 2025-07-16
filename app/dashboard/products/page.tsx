@@ -6,25 +6,29 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Edit, Trash2, Eye, Loader2, X, Tag, Clock, Star, Image as ImageIcon } from "lucide-react"
+import { Search, Plus, Edit, Trash2, Eye, Loader2, X, Tag, Clock, Star, Image as ImageIcon, Filter, Grid, List } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { productsApi, categoriesApi } from "@/lib/api"
+import { categoriesApi } from "@/lib/api"
 import { Product, CreateProductRequest, UpdateProductRequest, Category } from "@/types/auth"
 import { useAuth } from "@/contexts/AuthContext"
+import { useProducts } from "@/hooks/useProducts"
+import { useCategories } from "@/hooks/useCategories"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { ProductImageUpload } from "@/components/product-image-upload"
+import { ProductLimitsDisplay } from "@/components/product-limits-display"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [showOnlyAvailable, setShowOnlyAvailable] = useState<boolean | undefined>(undefined)
   const [showOnlyFeatured, setShowOnlyFeatured] = useState<boolean | undefined>(undefined)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   
   // Estados dos modais
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -53,70 +57,39 @@ export default function ProductsPage() {
   
   const { toast } = useToast()
   const { store } = useAuth()
+  
+  // Hooks
+  const { 
+    products, 
+    isLoading, 
+    imageSettings, 
+    productLimits,
+    createProduct, 
+    updateProduct, 
+    deleteProduct,
+    uploadMainImage,
+    uploadExtraImage,
+    removeMainImage,
+    removeExtraImage
+  } = useProducts()
+  
+  const { categories } = useCategories()
 
-  // Carregar produtos da API
-  useEffect(() => {
-    const loadProducts = async () => {
-      if (!store?.id) {
-        setLoading(false)
-        return
-      }
+  // Filtrar produtos baseado nos filtros selecionados
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.descricao?.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesCategory = !selectedCategory || product.category_id === selectedCategory
+    const matchesAvailability = showOnlyAvailable === undefined || product.disponivel === showOnlyAvailable
+    const matchesFeatured = showOnlyFeatured === undefined || product.destaque === showOnlyFeatured
+    
+    return matchesSearch && matchesCategory && matchesAvailability && matchesFeatured
+  })
 
-      try {
-        setLoading(true)
-        const filters: any = {}
-        if (selectedCategory) filters.category_id = selectedCategory
-        if (showOnlyAvailable !== undefined) filters.disponivel = showOnlyAvailable
-        if (showOnlyFeatured !== undefined) filters.destaque = showOnlyFeatured
 
-        const response = await productsApi.getProducts(store.id, filters)
-        setProducts(response.data.products || [])
-      } catch (error: any) {
-        console.error('Erro ao carregar produtos:', error)
-        toast({
-          title: "Erro",
-          description: error.message || "Erro ao carregar produtos",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadProducts()
-  }, [store?.id, selectedCategory, showOnlyAvailable, showOnlyFeatured, toast])
-
-  // Carregar categorias
-  useEffect(() => {
-    const loadCategories = async () => {
-      if (!store?.id) return
-
-      try {
-        const response = await categoriesApi.getCategories(store.id)
-        setCategories(response.data.categories || [])
-      } catch (error: any) {
-        console.error('Erro ao carregar categorias:', error)
-      }
-    }
-
-    loadCategories()
-  }, [store?.id])
-
-  const filteredProducts = products.filter(product =>
-    product.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.descricao?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
 
   const handleCreateProduct = async () => {
-    if (!store?.id) {
-      toast({
-        title: "Erro",
-        description: "Loja não encontrada",
-        variant: "destructive",
-      })
-      return
-    }
-
     if (!formData.nome.trim() || formData.preco <= 0) {
       toast({
         title: "Erro",
@@ -128,32 +101,23 @@ export default function ProductsPage() {
 
     setIsSubmitting(true)
     try {
-      const response = await productsApi.createProduct(store.id, formData)
-      setProducts(prev => [...prev, response.data.product])
-      setIsCreateModalOpen(false)
-      resetForm()
-      
-      toast({
-        title: "Sucesso",
-        description: response.message || "Produto criado com sucesso",
-      })
+      const success = await createProduct(formData)
+      if (success) {
+        setIsCreateModalOpen(false)
+        resetForm()
+      }
     } catch (error: any) {
       console.error('Erro ao criar produto:', error)
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao criar produto",
-        variant: "destructive",
-      })
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleEditProduct = async () => {
-    if (!store?.id || !editingProduct) {
+    if (!editingProduct) {
       toast({
         title: "Erro",
-        description: "Loja não encontrada",
+        description: "Produto não encontrado",
         variant: "destructive",
       })
       return
@@ -170,57 +134,26 @@ export default function ProductsPage() {
 
     setIsSubmitting(true)
     try {
-      const response = await productsApi.updateProduct(store.id, editingProduct.id, formData)
-      setProducts(prev => prev.map(prod => 
-        prod.id === editingProduct.id ? response.data.product : prod
-      ))
-      setIsEditModalOpen(false)
-      setEditingProduct(null)
-      resetForm()
-      
-      toast({
-        title: "Sucesso",
-        description: response.message || "Produto atualizado com sucesso",
-      })
+      const success = await updateProduct(editingProduct.id, formData)
+      if (success) {
+        setIsEditModalOpen(false)
+        setEditingProduct(null)
+        resetForm()
+      }
     } catch (error: any) {
       console.error('Erro ao atualizar produto:', error)
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao atualizar produto",
-        variant: "destructive",
-      })
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleDeleteProduct = async (productId: string) => {
-    if (!store?.id) {
-      toast({
-        title: "Erro",
-        description: "Loja não encontrada",
-        variant: "destructive",
-      })
-      return
-    }
-
     if (!confirm("Tem certeza que deseja excluir este produto?")) return
 
     try {
-      await productsApi.deleteProduct(store.id, productId)
-      setProducts(prev => prev.filter(prod => prod.id !== productId))
-      
-      toast({
-        title: "Sucesso",
-        description: "Produto excluído com sucesso",
-      })
+      await deleteProduct(productId)
     } catch (error: any) {
       console.error('Erro ao excluir produto:', error)
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao excluir produto",
-        variant: "destructive",
-      })
     }
   }
 
@@ -347,6 +280,17 @@ export default function ProductsPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Produtos</h1>
               <p className="text-gray-600">Gerencie o cardápio da sua loja</p>
+              {productLimits && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    {productLimits.plan === 'fomi_simples' ? 'Plano Grátis' : 
+                     productLimits.plan === 'fomi_duplo' ? 'Fomi Duplo' : 'Fomi Supremo'}
+                  </Badge>
+                  <span className="text-xs text-gray-600">
+                    {productLimits.current} / {productLimits.limit === -1 ? '∞' : productLimits.limit} produtos
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-4">
@@ -359,6 +303,24 @@ export default function ProductsPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+              
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid size={16} />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List size={16} />
+                </Button>
+              </div>
+              
               <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-primary hover:bg-primary/90" onClick={openCreateModal}>
@@ -485,6 +447,30 @@ export default function ProductsPage() {
                           placeholder="https://exemplo.com/imagem.jpg"
                         />
                       </div>
+                      
+                      {/* Upload de Imagens */}
+                      <div className="grid gap-2">
+                        <Label>Imagens do Produto</Label>
+                        <ProductImageUpload
+                          currentMainImage={formData.imagem_url}
+                          currentExtraImages={[]}
+                          onUploadMain={async (file) => {
+                            // Para novos produtos, salvar a URL temporariamente
+                            const url = URL.createObjectURL(file)
+                            setFormData(prev => ({ ...prev, imagem_url: url }))
+                            return true
+                          }}
+                          onUploadExtra={async () => true}
+                          onRemoveMain={async () => {
+                            setFormData(prev => ({ ...prev, imagem_url: "" }))
+                            return true
+                          }}
+                          onRemoveExtra={async () => true}
+                          imageSettings={imageSettings}
+                          isLoading={isLoading}
+                          maxExtraImages={5}
+                        />
+                      </div>
                     </div>
 
                     {/* Status */}
@@ -607,50 +593,93 @@ export default function ProductsPage() {
         </motion.header>
 
         <main className="flex-1 overflow-auto p-6">
-          <motion.div
-            className="bg-white rounded-xl border border-gray-200"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Todos os Produtos</h2>
-                <div className="flex items-center space-x-4">
-                  <select
-                    className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                  >
-                    <option value="">Todas as categorias</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.nome}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    value={showOnlyAvailable === undefined ? "" : showOnlyAvailable.toString()}
-                    onChange={(e) => setShowOnlyAvailable(e.target.value === "" ? undefined : e.target.value === "true")}
-                  >
-                    <option value="">Todos os status</option>
-                    <option value="true">Apenas disponíveis</option>
-                    <option value="false">Apenas indisponíveis</option>
-                  </select>
-                  <select
-                    className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    value={showOnlyFeatured === undefined ? "" : showOnlyFeatured.toString()}
-                    onChange={(e) => setShowOnlyFeatured(e.target.value === "" ? undefined : e.target.value === "true")}
-                  >
-                    <option value="">Todos os produtos</option>
-                    <option value="true">Apenas destaque</option>
-                  </select>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Sidebar com limites e filtros */}
+            <div className="lg:col-span-1 space-y-6">
+              <ProductLimitsDisplay 
+                limits={productLimits}
+                isLoading={isLoading}
+                onUpgradeClick={() => window.location.href = '/plans'}
+              />
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Filter size={16} />
+                    Filtros
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Categoria</Label>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue placeholder="Todas as categorias" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Todas as categorias</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Disponibilidade</Label>
+                    <Select 
+                      value={showOnlyAvailable === undefined ? "" : showOnlyAvailable.toString()}
+                      onValueChange={(value) => setShowOnlyAvailable(value === "" ? undefined : value === "true")}
+                    >
+                      <SelectTrigger className="text-sm">
+                        <SelectValue placeholder="Todos os status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Todos os status</SelectItem>
+                        <SelectItem value="true">Apenas disponíveis</SelectItem>
+                        <SelectItem value="false">Apenas indisponíveis</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Destaque</Label>
+                    <Select 
+                      value={showOnlyFeatured === undefined ? "" : showOnlyFeatured.toString()}
+                      onValueChange={(value) => setShowOnlyFeatured(value === "" ? undefined : value === "true")}
+                    >
+                      <SelectTrigger className="text-sm">
+                        <SelectValue placeholder="Todos os produtos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Todos os produtos</SelectItem>
+                        <SelectItem value="true">Apenas destaque</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
+            
+            {/* Lista de produtos */}
+            <div className="lg:col-span-3">
+              <motion.div
+                className="bg-white rounded-xl border border-gray-200"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold">
+                      Produtos ({filteredProducts.length})
+                    </h2>
+                  </div>
+                </div>
 
-            {loading ? (
+            {isLoading ? (
               <div className="flex items-center justify-center p-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
@@ -751,7 +780,9 @@ export default function ProductsPage() {
                 </AnimatePresence>
               </div>
             )}
-          </motion.div>
+              </motion.div>
+            </div>
+          </div>
         </main>
       </div>
 
@@ -874,6 +905,42 @@ export default function ProductsPage() {
                   value={formData.imagem_url}
                   onChange={(e) => setFormData(prev => ({ ...prev, imagem_url: e.target.value }))}
                   placeholder="https://exemplo.com/imagem.jpg"
+                />
+              </div>
+              
+              {/* Upload de Imagens */}
+              <div className="grid gap-2">
+                <Label>Imagens do Produto</Label>
+                <ProductImageUpload
+                  currentMainImage={editingProduct?.imagem_url}
+                  currentExtraImages={editingProduct?.imagens_extras || []}
+                  onUploadMain={async (file) => {
+                    if (editingProduct) {
+                      return await uploadMainImage(editingProduct.id, file)
+                    }
+                    return false
+                  }}
+                  onUploadExtra={async (file) => {
+                    if (editingProduct) {
+                      return await uploadExtraImage(editingProduct.id, file)
+                    }
+                    return false
+                  }}
+                  onRemoveMain={async () => {
+                    if (editingProduct) {
+                      return await removeMainImage(editingProduct.id)
+                    }
+                    return false
+                  }}
+                  onRemoveExtra={async (index) => {
+                    if (editingProduct) {
+                      return await removeExtraImage(editingProduct.id, index)
+                    }
+                    return false
+                  }}
+                  imageSettings={imageSettings}
+                  isLoading={isLoading}
+                  maxExtraImages={5}
                 />
               </div>
             </div>

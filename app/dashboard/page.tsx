@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
+import { useOrders } from "@/hooks/useOrders"
 import { SidebarMenu } from "@/components/sidebar-menu"
 import { DashboardCard } from "@/components/dashboard-card"
 import { motion } from "framer-motion"
@@ -12,75 +13,77 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useState, useRef } from "react"
 
-const dashboardData = [
-  {
-    title: "Pedidos Hoje",
-    value: "24",
-    change: "+12% vs ontem",
-    changeType: "positive" as const,
-    icon: ShoppingBag,
-  },
-  {
-    title: "Faturamento",
-    value: "R$ 1.247",
-    change: "+8% vs ontem",
-    changeType: "positive" as const,
-    icon: DollarSign,
-  },
-  {
-    title: "Clientes Ativos",
-    value: "156",
-    change: "+3 novos hoje",
-    changeType: "positive" as const,
-    icon: Users,
-  },
-  {
-    title: "Ticket Médio",
-    value: "R$ 52",
-    change: "-2% vs ontem",
-    changeType: "negative" as const,
-    icon: TrendingUp,
-  },
-]
-
-const recentOrders = [
-  {
-    id: "#1234",
-    customer: "Maria Silva",
-    items: "2x Hambúrguer, 1x Batata",
-    value: "R$ 45,90",
-    status: "preparing",
-    time: "há 5 min",
-  },
-  {
-    id: "#1235",
-    customer: "João Santos",
-    items: "1x Pizza Margherita",
-    value: "R$ 32,00",
-    status: "delivered",
-    time: "há 12 min",
-  },
-  {
-    id: "#1236",
-    customer: "Ana Costa",
-    items: "3x Açaí, 2x Suco",
-    value: "R$ 28,50",
-    status: "new",
-    time: "há 2 min",
-  },
-];
-
-const statusConfig = {
-  new: { label: "Novo", color: "bg-blue-100 text-blue-800" },
-  preparing: { label: "Preparando", color: "bg-yellow-100 text-yellow-800" },
-  delivered: { label: "Entregue", color: "bg-green-100 text-green-800" },
-};
-
 export default function DashboardPage() {
   const { user, store, isLoading, hasStore, hasChosenPlan, refreshStoreStatus, checkSubscriptionStatus, logout } = useAuth()
   const router = useRouter()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  
+  // Buscar estatísticas de pedidos
+  const { statistics } = useOrders()
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value)
+  }
+
+  const dashboardData = [
+    {
+      title: "Pedidos Hoje",
+      value: statistics?.total_pedidos?.toString() || "0",
+      change: statistics ? `${statistics.pedidos_por_status.pendente + statistics.pedidos_por_status.confirmado + statistics.pedidos_por_status.preparando} pendentes` : "0 pendentes",
+      changeType: "positive" as const,
+      icon: ShoppingBag,
+    },
+    {
+      title: "Faturamento",
+      value: statistics ? formatCurrency(statistics.total_vendas) : "R$ 0,00",
+      change: statistics ? `Ticket médio: ${formatCurrency(statistics.ticket_medio)}` : "R$ 0,00",
+      changeType: "positive" as const,
+      icon: DollarSign,
+    },
+    {
+      title: "Pedidos Pendentes",
+      value: statistics?.pedidos_por_status?.pendente?.toString() || "0",
+      change: statistics ? `${statistics.pedidos_por_status.confirmado} confirmados` : "0 confirmados",
+      changeType: "positive" as const,
+      icon: Users,
+    },
+    {
+      title: "Pedidos Preparando",
+      value: statistics?.pedidos_por_status?.preparando?.toString() || "0",
+      change: statistics ? `${statistics.pedidos_por_status.saiu_entrega} em entrega` : "0 em entrega",
+      changeType: "positive" as const,
+      icon: TrendingUp,
+    },
+  ]
+
+  const { orders } = useOrders({ limit: 5 })
+
+  const getStatusConfig = (status: string) => {
+    const configs = {
+      pendente: { label: "Pendente", color: "bg-blue-100 text-blue-800" },
+      confirmado: { label: "Confirmado", color: "bg-yellow-100 text-yellow-800" },
+      preparando: { label: "Preparando", color: "bg-orange-100 text-orange-800" },
+      saiu_entrega: { label: "Em Entrega", color: "bg-purple-100 text-purple-800" },
+      entregue: { label: "Entregue", color: "bg-green-100 text-green-800" },
+      cancelado: { label: "Cancelado", color: "bg-red-100 text-red-800" },
+    }
+    return configs[status as keyof typeof configs] || { label: status, color: "bg-gray-100 text-gray-800" }
+  }
+
+  const formatTimeAgo = (dateString: string) => {
+    const now = new Date()
+    const orderDate = new Date(dateString)
+    const diffInMinutes = Math.floor((now.getTime() - orderDate.getTime()) / (1000 * 60))
+    
+    if (diffInMinutes < 1) return "agora mesmo"
+    if (diffInMinutes < 60) return `há ${diffInMinutes} min`
+    if (diffInMinutes < 1440) return `há ${Math.floor(diffInMinutes / 60)}h`
+    return `há ${Math.floor(diffInMinutes / 1440)}d`
+  }
 
   // Fecha o menu ao clicar fora
   useEffect(() => {
@@ -105,42 +108,31 @@ export default function DashboardPage() {
     console.log('- store:', store);
     console.log('- user:', user);
     
+    // Deixar o AuthContext lidar com os redirecionamentos principais
+    // Este useEffect apenas verifica inconsistências e força recarregamentos se necessário
+  }, [isLoading, hasStore, hasChosenPlan, store, user]);
+
+  // Verificar inconsistências entre localStorage e estado
+  useEffect(() => {
     if (!isLoading) {
-      if (!hasStore) {
-        console.log('Dashboard - Redirecionando para create-store: não tem loja');
-        router.push('/dashboard/create-store');
-        return;
+      const hasStoreInStorage = localStorage.getItem('has_store') === 'true';
+      const hasChosenPlanInStorage = localStorage.getItem('has_chosen_plan') === 'true';
+      
+      console.log('Dashboard - Verificando inconsistências:');
+      console.log('- hasStoreInStorage:', hasStoreInStorage, 'hasStore:', hasStore);
+      console.log('- hasChosenPlanInStorage:', hasChosenPlanInStorage, 'hasChosenPlan:', hasChosenPlan);
+      
+      // Se o localStorage indica que tem loja mas o estado não, recarregar
+      if (hasStoreInStorage && !hasStore) {
+        console.log('Dashboard - Inconsistência detectada, recarregando status da loja...');
+        refreshStoreStatus();
       }
       
-      if (!hasChosenPlan) {
-        console.log('Dashboard - Redirecionando para plans: não escolheu plano');
-        router.push('/plans');
-        return;
+      // Se o localStorage indica que tem plano mas o estado não, recarregar
+      if (hasChosenPlanInStorage && !hasChosenPlan) {
+        console.log('Dashboard - Inconsistência detectada, recarregando status da assinatura...');
+        checkSubscriptionStatus();
       }
-    }
-  }, [isLoading, hasStore, hasChosenPlan, router]);
-
-  // Tentar recarregar o status da loja e assinatura se necessário
-  useEffect(() => {
-    const hasStoreInStorage = localStorage.getItem('has_store') === 'true';
-    const hasChosenPlanInStorage = localStorage.getItem('has_chosen_plan') === 'true';
-    
-    console.log('Dashboard - Verificando storage:');
-    console.log('- hasStoreInStorage:', hasStoreInStorage);
-    console.log('- hasChosenPlanInStorage:', hasChosenPlanInStorage);
-    console.log('- hasStore (state):', hasStore);
-    console.log('- hasChosenPlan (state):', hasChosenPlan);
-    
-    // Se o localStorage indica que tem loja mas o estado não, recarregar
-    if (hasStoreInStorage && !hasStore && !isLoading) {
-      console.log('Dashboard - Inconsistência detectada, recarregando status da loja...');
-      refreshStoreStatus();
-    }
-    
-    // Se o localStorage indica que tem plano mas o estado não, recarregar
-    if (hasChosenPlanInStorage && !hasChosenPlan && !isLoading) {
-      console.log('Dashboard - Inconsistência detectada, recarregando status da assinatura...');
-      checkSubscriptionStatus();
     }
   }, [hasStore, hasChosenPlan, isLoading, refreshStoreStatus, checkSubscriptionStatus]);
 
@@ -263,35 +255,44 @@ export default function DashboardPage() {
             </div>
 
             <div className="space-y-4">
-              {recentOrders.map((order, index) => (
-                <motion.div
-                  key={order.id}
-                  className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 + index * 0.1 }}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <p className="font-medium text-gray-900">{order.id}</p>
-                        <p className="text-sm text-gray-600">{order.customer}</p>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-900">{order.items}</p>
-                        <p className="text-xs text-gray-500">{order.time}</p>
+              {orders.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Nenhum pedido recente</p>
+                </div>
+              ) : (
+                orders.map((order, index) => (
+                  <motion.div
+                    key={order.id}
+                    className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 + index * 0.1 }}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-4">
+                        <div>
+                          <p className="font-medium text-gray-900">#{order.numero_pedido}</p>
+                          <p className="text-sm text-gray-600">{order.cliente_nome}</p>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-900">
+                            {order.items?.slice(0, 2).map(item => `${item.quantidade}x ${item.produto_nome}`).join(', ')}
+                            {order.items && order.items.length > 2 && '...'}
+                          </p>
+                          <p className="text-xs text-gray-500">{formatTimeAgo(order.pedido_em)}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center space-x-4">
-                    <span className="font-semibold text-gray-900">{order.value}</span>
-                    <Badge className={statusConfig[order.status as keyof typeof statusConfig].color}>
-                      {statusConfig[order.status as keyof typeof statusConfig].label}
-                    </Badge>
-                  </div>
-                </motion.div>
-              ))}
+                    <div className="flex items-center space-x-4">
+                      <span className="font-semibold text-gray-900">{formatCurrency(order.total)}</span>
+                      <Badge className={getStatusConfig(order.status).color}>
+                        {getStatusConfig(order.status).label}
+                      </Badge>
+                    </div>
+                  </motion.div>
+                ))
+              )}
             </div>
           </motion.div>
         </main>

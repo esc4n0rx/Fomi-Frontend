@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Star, Crown, Zap } from "lucide-react";
 import { Plan } from "@/types/billing";
 import { useBilling } from "@/hooks/useBilling";
+import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const plans: Plan[] = [
   {
@@ -58,9 +59,18 @@ const plans: Plan[] = [
 
 export function PlanSelection() {
   const { createSubscription } = useBilling();
+  const { hasChosenPlan, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirecionar se já tem plano ativo
+  useEffect(() => {
+    if (!authLoading && hasChosenPlan) {
+      console.log('PlanSelection - Usuário já tem plano ativo, redirecionando para dashboard');
+      router.push('/dashboard');
+    }
+  }, [hasChosenPlan, authLoading, router]);
 
   const handlePlanSelect = async (plan: Plan) => {
     if (plan.isFree) {
@@ -90,6 +100,20 @@ export function PlanSelection() {
     if (plan.isPopular) return <Star className="w-6 h-6" />;
     return <Crown className="w-6 h-6" />;
   };
+
+  // Mostrar loading enquanto verifica o status do plano
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <p className="text-gray-600 font-medium">Verificando seu plano...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
