@@ -17,13 +17,20 @@ import { OrderPrint } from "@/components/order-print"
 
 export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedStatus, setSelectedStatus] = useState<string>("")
+  const [selectedStatus, setSelectedStatus] = useState<string>("todos")
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false)
   
   const { orders, statistics, isLoading, error, updateOrderStatus, addOrderNote, refresh } = useOrders({
-    status: selectedStatus || undefined
+    status: selectedStatus === "todos" ? undefined : selectedStatus || undefined
+  })
+  
+  console.log('OrdersPage - Estado atual:', {
+    orders: orders?.length,
+    statistics,
+    isLoading,
+    error
   })
 
   const statusConfig = {
@@ -135,7 +142,7 @@ export default function OrdersPage() {
                   Gerencie todos os pedidos da sua loja
                   {statistics && (
                     <span className="ml-2 text-sm text-gray-500">
-                      • {statistics.total_pedidos} pedidos • {formatCurrency(statistics.total_vendas)} em vendas
+                      • {statistics.total_pedidos || 0} pedidos • {statistics.total_vendas ? formatCurrency(statistics.total_vendas) : 'R$ 0,00'} em vendas
                     </span>
                   )}
                 </p>
@@ -156,7 +163,7 @@ export default function OrdersPage() {
                     <SelectValue placeholder="Filtrar status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os status</SelectItem>
+                    <SelectItem value="todos">Todos os status</SelectItem>
                     <SelectItem value="pendente">Pendente</SelectItem>
                     <SelectItem value="confirmado">Confirmado</SelectItem>
                     <SelectItem value="preparando">Preparando</SelectItem>
@@ -182,12 +189,12 @@ export default function OrdersPage() {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">
-                  Pedidos {selectedStatus ? `- ${statusConfig[selectedStatus as keyof typeof statusConfig]?.label}` : ''}
+                  Pedidos {selectedStatus && selectedStatus !== "todos" ? `- ${statusConfig[selectedStatus as keyof typeof statusConfig]?.label}` : ''}
                 </h2>
                 <div className="flex space-x-2">
-                  {statistics && Object.entries(statistics.pedidos_por_status).map(([status, count]) => (
+                  {statistics?.pedidos_por_status && Object.entries(statistics.pedidos_por_status).map(([status, count]) => (
                     <Badge key={status} variant="secondary" className={statusConfig[status as keyof typeof statusConfig]?.color}>
-                      {statusConfig[status as keyof typeof statusConfig]?.label}: {count}
+                      {statusConfig[status as keyof typeof statusConfig]?.label}: {count || 0}
                     </Badge>
                   ))}
                 </div>

@@ -47,8 +47,34 @@ interface UseStoreCustomizationReturn {
   getUpgradeMessage: (feature: string) => string | null;
 }
 
+// Valores padrão para customização
+const DEFAULT_CUSTOMIZATION: StoreCustomization = {
+  cor_primaria: '#FF6B35',
+  cor_secundaria: '#F7931E',
+  cor_texto: '#333333',
+  cor_fundo: '#FFFFFF',
+  fonte_titulo: 'Roboto',
+  fonte_texto: 'Arial',
+};
+
+// Valores padrão para informações básicas
+const DEFAULT_BASIC_INFO: StoreBasicInfo = {
+  nome: '',
+  descricao: '',
+  whatsapp: '',
+  instagram: '',
+  facebook: '',
+  endereco_cep: '',
+  endereco_rua: '',
+  endereco_numero: '',
+  endereco_complemento: '',
+  endereco_bairro: '',
+  endereco_cidade: '',
+  endereco_estado: '',
+};
+
 export const useStoreCustomization = (): UseStoreCustomizationReturn => {
-  const { user } = useAuth();
+  const { user, store: authStore } = useAuth();
   const [store, setStore] = useState<StoreData | null>(null);
   const [settings, setSettings] = useState<CustomizationSettings | null>(null);
   const [templates, setTemplates] = useState<CustomizationTemplate[]>([]);
@@ -56,50 +82,31 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
   // Loading states
   const [loading, setLoading] = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(false);
-  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [loadingTemplates, setLoadingTemplates] = useState(false); // Mantido para compatibilidade
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   
   // Form data
-  const [basicInfo, setBasicInfo] = useState<StoreBasicInfo>({
-    nome: '',
-    descricao: '',
-    whatsapp: '',
-    instagram: '',
-    facebook: '',
-    endereco_cep: '',
-    endereco_rua: '',
-    endereco_numero: '',
-    endereco_complemento: '',
-    endereco_bairro: '',
-    endereco_cidade: '',
-    endereco_estado: '',
-  });
-  
-  const [customization, setCustomization] = useState<StoreCustomization>({
-    cor_primaria: '#FF6B35',
-    cor_secundaria: '#F7931E',
-    cor_texto: '#333333',
-    cor_fundo: '#FFFFFF',
-    fonte_titulo: 'Roboto',
-    fonte_texto: 'Arial',
-  });
-  
+  const [basicInfo, setBasicInfo] = useState<StoreBasicInfo>(DEFAULT_BASIC_INFO);
+  const [customization, setCustomization] = useState<StoreCustomization>(DEFAULT_CUSTOMIZATION);
   const [previewCustomization, setPreviewCustomization] = useState<StoreCustomization | null>(null);
 
   // Load store data
   const loadStore = useCallback(async () => {
-    if (!user?.store_id) return;
+    if (!authStore?.id) return;
     
     setLoading(true);
     try {
-      const response = await storeCustomizationAPI.getStoreData(user.store_id);
-      if (response.success) {
+      console.log('Carregando dados da loja:', authStore.id);
+      const response = await storeCustomizationAPI.getStoreData(authStore.id);
+      console.log('Resposta da API - dados da loja:', response);
+      
+      if (response.success && response.data?.store) {
         const storeData = response.data.store;
         setStore(storeData);
         
-        // Update form data
-        setBasicInfo({
+        // Atualizar dados do formulário com os dados da loja
+        const newBasicInfo: StoreBasicInfo = {
           nome: storeData.nome || '',
           descricao: storeData.descricao || '',
           whatsapp: storeData.whatsapp || '',
@@ -112,16 +119,20 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
           endereco_bairro: storeData.endereco_bairro || '',
           endereco_cidade: storeData.endereco_cidade || '',
           endereco_estado: storeData.endereco_estado || '',
-        });
+        };
         
-        setCustomization({
-          cor_primaria: storeData.cor_primaria || '#FF6B35',
-          cor_secundaria: storeData.cor_secundaria || '#F7931E',
-          cor_texto: storeData.cor_texto || '#333333',
-          cor_fundo: storeData.cor_fundo || '#FFFFFF',
-          fonte_titulo: storeData.fonte_titulo || 'Roboto',
-          fonte_texto: storeData.fonte_texto || 'Arial',
-        });
+        const newCustomization: StoreCustomization = {
+          cor_primaria: storeData.cor_primaria || DEFAULT_CUSTOMIZATION.cor_primaria,
+          cor_secundaria: storeData.cor_secundaria || DEFAULT_CUSTOMIZATION.cor_secundaria,
+          cor_texto: storeData.cor_texto || DEFAULT_CUSTOMIZATION.cor_texto,
+          cor_fundo: storeData.cor_fundo || DEFAULT_CUSTOMIZATION.cor_fundo,
+          fonte_titulo: storeData.fonte_titulo || DEFAULT_CUSTOMIZATION.fonte_titulo,
+          fonte_texto: storeData.fonte_texto || DEFAULT_CUSTOMIZATION.fonte_texto,
+        };
+        
+        console.log('Atualizando dados do formulário:', { newBasicInfo, newCustomization });
+        setBasicInfo(newBasicInfo);
+        setCustomization(newCustomization);
       }
     } catch (error: any) {
       console.error('Erro ao carregar dados da loja:', error);
@@ -133,17 +144,55 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
     } finally {
       setLoading(false);
     }
-  }, [user?.store_id]);
+  }, [authStore?.id]);
 
   // Load customization settings
   const loadSettings = useCallback(async () => {
-    if (!user?.store_id) return;
+    if (!authStore?.id) return;
     
     setLoadingSettings(true);
     try {
-      const response = await storeCustomizationAPI.getCustomizationSettings(user.store_id);
-      if (response.success) {
+      console.log('Carregando configurações de customização:', authStore.id);
+      const response = await storeCustomizationAPI.getCustomizationSettings(authStore.id);
+      console.log('Resposta da API - configurações:', response);
+      
+      if (response.success && response.data) {
         setSettings(response.data);
+        
+        // Se não temos dados da loja ainda, usar os dados das configurações
+        if (!store && response.data.store) {
+          const storeData = response.data.store;
+          setStore(storeData);
+          
+          // Atualizar dados do formulário
+          const newBasicInfo: StoreBasicInfo = {
+            nome: storeData.nome || '',
+            descricao: storeData.descricao || '',
+            whatsapp: storeData.whatsapp || '',
+            instagram: storeData.instagram || '',
+            facebook: storeData.facebook || '',
+            endereco_cep: storeData.endereco_cep || '',
+            endereco_rua: storeData.endereco_rua || '',
+            endereco_numero: storeData.endereco_numero || '',
+            endereco_complemento: storeData.endereco_complemento || '',
+            endereco_bairro: storeData.endereco_bairro || '',
+            endereco_cidade: storeData.endereco_cidade || '',
+            endereco_estado: storeData.endereco_estado || '',
+          };
+          
+          const newCustomization: StoreCustomization = {
+            cor_primaria: storeData.cor_primaria || DEFAULT_CUSTOMIZATION.cor_primaria,
+            cor_secundaria: storeData.cor_secundaria || DEFAULT_CUSTOMIZATION.cor_secundaria,
+            cor_texto: storeData.cor_texto || DEFAULT_CUSTOMIZATION.cor_texto,
+            cor_fundo: storeData.cor_fundo || DEFAULT_CUSTOMIZATION.cor_fundo,
+            fonte_titulo: storeData.fonte_titulo || DEFAULT_CUSTOMIZATION.fonte_titulo,
+            fonte_texto: storeData.fonte_texto || DEFAULT_CUSTOMIZATION.fonte_texto,
+          };
+          
+          console.log('Atualizando dados do formulário via configurações:', { newBasicInfo, newCustomization });
+          setBasicInfo(newBasicInfo);
+          setCustomization(newCustomization);
+        }
       }
     } catch (error: any) {
       console.error('Erro ao carregar configurações:', error);
@@ -155,34 +204,22 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
     } finally {
       setLoadingSettings(false);
     }
-  }, [user?.store_id]);
+  }, [authStore?.id, store]);
 
-  // Load templates
+  // Load templates - Removido temporariamente para evitar erro 404
   const loadTemplates = useCallback(async () => {
-    if (!user?.store_id) return;
-    
-    setLoadingTemplates(true);
-    try {
-      const response = await storeCustomizationAPI.getTemplates(user.store_id);
-      if (response.success) {
-        setTemplates(response.data.templates || []);
-      }
-    } catch (error: any) {
-      console.error('Erro ao carregar templates:', error);
-      // Não mostrar toast para templates, pois pode não estar disponível
-    } finally {
-      setLoadingTemplates(false);
-    }
-  }, [user?.store_id]);
+    // Função vazia para manter compatibilidade
+    // Templates serão implementados posteriormente
+  }, []);
 
   // Update basic info
   const updateBasicInfo = useCallback(async (data: StoreBasicInfo) => {
-    if (!user?.store_id) return;
+    if (!authStore?.id) return;
     
     setSaving(true);
     try {
-      const response = await storeCustomizationAPI.updateBasicInfo(user.store_id, data);
-      if (response.success) {
+      const response = await storeCustomizationAPI.updateBasicInfo(authStore.id, data);
+      if (response.success && response.data?.store) {
         setStore(response.data.store);
         setBasicInfo(data);
         toast({
@@ -200,16 +237,16 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
     } finally {
       setSaving(false);
     }
-  }, [user?.store_id]);
+  }, [authStore?.id]);
 
   // Update customization
   const updateCustomization = useCallback(async (data: StoreCustomization) => {
-    if (!user?.store_id) return;
+    if (!authStore?.id) return;
     
     setSaving(true);
     try {
-      const response = await storeCustomizationAPI.updateCustomization(user.store_id, data);
-      if (response.success) {
+      const response = await storeCustomizationAPI.updateCustomization(authStore.id, data);
+      if (response.success && response.data?.store) {
         setStore(response.data.store);
         setCustomization(data);
         setPreviewCustomization(null);
@@ -228,16 +265,16 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
     } finally {
       setSaving(false);
     }
-  }, [user?.store_id]);
+  }, [authStore?.id]);
 
   // Upload logo
   const uploadLogo = useCallback(async (file: File) => {
-    if (!user?.store_id) return;
+    if (!authStore?.id) return;
     
     setUploading(true);
     try {
-      const response = await storeCustomizationAPI.uploadLogo(user.store_id, file);
-      if (response.success) {
+      const response = await storeCustomizationAPI.uploadLogo(authStore.id, file);
+      if (response.success && response.data?.store) {
         setStore(response.data.store);
         toast({
           title: "Sucesso",
@@ -254,16 +291,16 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
     } finally {
       setUploading(false);
     }
-  }, [user?.store_id]);
+  }, [authStore?.id]);
 
   // Upload banner
   const uploadBanner = useCallback(async (file: File) => {
-    if (!user?.store_id) return;
+    if (!authStore?.id) return;
     
     setUploading(true);
     try {
-      const response = await storeCustomizationAPI.uploadBanner(user.store_id, file);
-      if (response.success) {
+      const response = await storeCustomizationAPI.uploadBanner(authStore.id, file);
+      if (response.success && response.data?.store) {
         setStore(response.data.store);
         toast({
           title: "Sucesso",
@@ -280,16 +317,16 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
     } finally {
       setUploading(false);
     }
-  }, [user?.store_id]);
+  }, [authStore?.id]);
 
   // Remove logo
   const removeLogo = useCallback(async () => {
-    if (!user?.store_id) return;
+    if (!authStore?.id) return;
     
     setUploading(true);
     try {
-      const response = await storeCustomizationAPI.removeLogo(user.store_id);
-      if (response.success) {
+      const response = await storeCustomizationAPI.removeLogo(authStore.id);
+      if (response.success && response.data?.store) {
         setStore(response.data.store);
         toast({
           title: "Sucesso",
@@ -306,16 +343,16 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
     } finally {
       setUploading(false);
     }
-  }, [user?.store_id]);
+  }, [authStore?.id]);
 
   // Remove banner
   const removeBanner = useCallback(async () => {
-    if (!user?.store_id) return;
+    if (!authStore?.id) return;
     
     setUploading(true);
     try {
-      const response = await storeCustomizationAPI.removeBanner(user.store_id);
-      if (response.success) {
+      const response = await storeCustomizationAPI.removeBanner(authStore.id);
+      if (response.success && response.data?.store) {
         setStore(response.data.store);
         toast({
           title: "Sucesso",
@@ -332,83 +369,32 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
     } finally {
       setUploading(false);
     }
-  }, [user?.store_id]);
+  }, [authStore?.id]);
 
-  // Apply template
+  // Apply template - Removido temporariamente para evitar erro 404
   const applyTemplate = useCallback(async (templateId: string) => {
-    if (!user?.store_id) return;
-    
-    setSaving(true);
-    try {
-      const response = await storeCustomizationAPI.applyTemplate(user.store_id, templateId);
-      if (response.success) {
-        const storeData = response.data.store;
-        setStore(storeData);
-        setCustomization({
-          cor_primaria: storeData.cor_primaria,
-          cor_secundaria: storeData.cor_secundaria,
-          cor_texto: storeData.cor_texto,
-          cor_fundo: storeData.cor_fundo,
-          fonte_titulo: storeData.fonte_titulo,
-          fonte_texto: storeData.fonte_texto,
-        });
-        setPreviewCustomization(null);
-        toast({
-          title: "Sucesso",
-          description: "Template aplicado com sucesso",
-        });
-      }
-    } catch (error: any) {
-      console.error('Erro ao aplicar template:', error);
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao aplicar template",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  }, [user?.store_id]);
+    // Função vazia para manter compatibilidade
+    // Templates serão implementados posteriormente
+    console.log('Templates temporariamente desabilitados');
+  }, []);
 
-  // Preview customization
+  // Preview customization - Simplificado para evitar chamadas à API
   const previewCustomizationChanges = useCallback(async (data: Partial<StoreCustomization>) => {
-    if (!user?.store_id) return;
-    
-    try {
-      const response = await storeCustomizationAPI.previewCustomization(user.store_id, data);
-      if (response.success) {
-        setPreviewCustomization(response.data.preview);
-      }
-    } catch (error: any) {
-      console.error('Erro ao gerar preview:', error);
-      // Não mostrar toast para preview
-    }
-  }, [user?.store_id]);
+    // Preview local sem chamada à API
+    setPreviewCustomization(data as StoreCustomization);
+  }, []);
 
-  // Reset customization
+  // Reset customization - Simplificado para usar valores padrão locais
   const resetCustomization = useCallback(async () => {
-    if (!user?.store_id) return;
-    
     setSaving(true);
     try {
-      const response = await storeCustomizationAPI.resetCustomization(user.store_id);
-      if (response.success) {
-        const storeData = response.data.store;
-        setStore(storeData);
-        setCustomization({
-          cor_primaria: storeData.cor_primaria,
-          cor_secundaria: storeData.cor_secundaria,
-          cor_texto: storeData.cor_texto,
-          cor_fundo: storeData.cor_fundo,
-          fonte_titulo: storeData.fonte_titulo,
-          fonte_texto: storeData.fonte_texto,
-        });
-        setPreviewCustomization(null);
-        toast({
-          title: "Sucesso",
-          description: "Personalização resetada para padrões",
-        });
-      }
+      // Reset para valores padrão locais
+      setCustomization(DEFAULT_CUSTOMIZATION);
+      setPreviewCustomization(null);
+      toast({
+        title: "Sucesso",
+        description: "Personalização resetada para padrões",
+      });
     } catch (error: any) {
       console.error('Erro ao resetar personalização:', error);
       toast({
@@ -419,11 +405,19 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
     } finally {
       setSaving(false);
     }
-  }, [user?.store_id]);
+  }, []);
 
-  // Check permissions
+  // Check permissions - Melhorada para verificar corretamente as permissões
   const hasPermission = useCallback((feature: keyof CustomizationSettings['permissions']): boolean => {
-    return settings?.permissions?.[feature] || false;
+    // Se não temos configurações carregadas, assumir que tem permissão (carregamento inicial)
+    if (!settings) {
+      console.log(`Permissão ${feature}: Configurações não carregadas, assumindo true`);
+      return true;
+    }
+    
+    const hasPermission = settings.permissions?.[feature] || false;
+    console.log(`Permissão ${feature}:`, hasPermission, 'Plano:', settings.user_plan);
+    return hasPermission;
   }, [settings]);
 
   // Get upgrade message
@@ -433,12 +427,13 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
 
   // Load data on mount
   useEffect(() => {
-    if (user?.store_id) {
+    if (authStore?.id) {
+      console.log('Iniciando carregamento de dados da loja:', authStore.id);
       loadStore();
       loadSettings();
-      loadTemplates();
+      // Removido loadTemplates() para evitar erro 404
     }
-  }, [user?.store_id, loadStore, loadSettings, loadTemplates]);
+  }, [authStore?.id, loadStore, loadSettings]);
 
   return {
     // Data

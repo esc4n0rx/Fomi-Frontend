@@ -3,7 +3,7 @@ import { LoginRequest, RegisterRequest, AuthResponse, ErrorResponse, User, Categ
 import { Coupon, CreateCouponRequest, UpdateCouponRequest, ValidateCouponRequest, CouponFilters } from '@/types/coupons';
 import { Order, OrderFilters, OrderStatistics, UpdateOrderStatusRequest, AddOrderNoteRequest } from '@/types/orders';
 
-const API_BASE_URL = 'https://api.fomi-eats.shop/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.fomi-eats.shop/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -23,6 +23,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('API Interceptor - Erro na requisição:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+    
     if (error.response?.status === 401) {
       // Token expirado ou inválido
       localStorage.removeItem('auth_token');
@@ -423,36 +431,48 @@ export const ordersApi = {
       if (filters?.page) params.append('page', filters.page.toString());
       if (filters?.limit) params.append('limit', filters.limit.toString());
       
+      console.log('ordersApi.getOrders: Fazendo requisição para:', `/orders/${storeId}?${params.toString()}`);
       const response = await api.get(`/orders/${storeId}?${params.toString()}`);
+      console.log('ordersApi.getOrders: Resposta recebida:', response.data);
       return response.data;
     } catch (error: any) {
+      console.error('ordersApi.getOrders: Erro na requisição:', error);
       throw error.response?.data || { success: false, message: 'Erro de conexão' };
     }
   },
 
   async getOrder(storeId: string, orderId: string): Promise<{ success: boolean; data: { order: Order } }> {
     try {
+      console.log('ordersApi.getOrder: Fazendo requisição para:', `/orders/${storeId}/${orderId}`);
       const response = await api.get(`/orders/${storeId}/${orderId}`);
+      console.log('ordersApi.getOrder: Resposta recebida:', response.data);
       return response.data;
     } catch (error: any) {
+      console.error('ordersApi.getOrder: Erro na requisição:', error);
       throw error.response?.data || { success: false, message: 'Erro de conexão' };
     }
   },
 
   async updateOrderStatus(storeId: string, orderId: string, data: UpdateOrderStatusRequest): Promise<{ success: boolean; message: string; data: { order: Order } }> {
     try {
+      console.log('ordersApi.updateOrderStatus: Fazendo requisição para:', `/orders/${storeId}/${orderId}/status`, data);
       const response = await api.patch(`/orders/${storeId}/${orderId}/status`, data);
+      console.log('ordersApi.updateOrderStatus: Resposta recebida:', response.data);
       return response.data;
     } catch (error: any) {
+      console.error('ordersApi.updateOrderStatus: Erro na requisição:', error);
       throw error.response?.data || { success: false, message: 'Erro de conexão' };
     }
   },
 
   async addOrderNote(storeId: string, orderId: string, data: AddOrderNoteRequest): Promise<{ success: boolean; message: string; data: { order: Order } }> {
     try {
+      console.log('ordersApi.addOrderNote: Fazendo requisição para:', `/orders/${storeId}/${orderId}/notes`, data);
       const response = await api.post(`/orders/${storeId}/${orderId}/notes`, data);
+      console.log('ordersApi.addOrderNote: Resposta recebida:', response.data);
       return response.data;
     } catch (error: any) {
+      console.error('ordersApi.addOrderNote: Erro na requisição:', error);
       throw error.response?.data || { success: false, message: 'Erro de conexão' };
     }
   },
@@ -466,9 +486,12 @@ export const ordersApi = {
       if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
       if (filters?.data_fim) params.append('data_fim', filters.data_fim);
       
+      console.log('ordersApi.getOrderStatistics: Fazendo requisição para:', `/orders/${storeId}/statistics?${params.toString()}`);
       const response = await api.get(`/orders/${storeId}/statistics?${params.toString()}`);
+      console.log('ordersApi.getOrderStatistics: Resposta recebida:', response.data);
       return response.data;
     } catch (error: any) {
+      console.error('ordersApi.getOrderStatistics: Erro na requisição:', error);
       throw error.response?.data || { success: false, message: 'Erro de conexão' };
     }
   }
@@ -570,45 +593,45 @@ export const storeCustomizationAPI = {
     }
   },
 
-  // Get templates
-  async getTemplates(storeId: string): Promise<{ success: boolean; data: any }> {
-    try {
-      const response = await api.get(`/stores/${storeId}/customization-templates`);
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data || { success: false, message: 'Erro de conexão' };
-    }
-  },
+  // Get templates - Removido temporariamente para evitar erro 404
+  // async getTemplates(storeId: string): Promise<{ success: boolean; data: any }> {
+  //   try {
+  //     const response = await api.get(`/customization-templates`);
+  //     return response.data;
+  //   } catch (error: any) {
+  //     throw error.response?.data || { success: false, message: 'Erro de conexão' };
+  //   }
+  // },
 
-  // Apply template
-  async applyTemplate(storeId: string, templateId: string): Promise<{ success: boolean; data: { store: any } }> {
-    try {
-      const response = await api.post(`/stores/${storeId}/apply-template`, { templateId });
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data || { success: false, message: 'Erro de conexão' };
-    }
-  },
+  // Apply template - Removido temporariamente para evitar erro 404
+  // async applyTemplate(storeId: string, templateId: string): Promise<{ success: boolean; data: { store: any } }> {
+  //   try {
+  //     const response = await api.post(`/stores/${storeId}/customization/apply-template`, { templateId });
+  //     return response.data;
+  //   } catch (error: any) {
+  //     throw error.response?.data || { success: false, message: 'Erro de conexão' };
+  //   }
+  // },
 
-  // Preview customization
-  async previewCustomization(storeId: string, data: any): Promise<{ success: boolean; data: { preview: any } }> {
-    try {
-      const response = await api.post(`/stores/${storeId}/preview-customization`, data);
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data || { success: false, message: 'Erro de conexão' };
-    }
-  },
+  // Preview customization - Removido temporariamente para evitar erro 404
+  // async previewCustomization(storeId: string, data: any): Promise<{ success: boolean; data: { preview: any } }> {
+  //   try {
+  //     const response = await api.post(`/stores/${storeId}/customization/preview`, data);
+  //     return response.data;
+  //   } catch (error: any) {
+  //     throw error.response?.data || { success: false, message: 'Erro de conexão' };
+  //   }
+  // },
 
-  // Reset customization
-  async resetCustomization(storeId: string): Promise<{ success: boolean; data: { store: any } }> {
-    try {
-      const response = await api.post(`/stores/${storeId}/reset-customization`);
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data || { success: false, message: 'Erro de conexão' };
-    }
-  },
+  // Reset customization - Removido temporariamente para evitar erro 404
+  // async resetCustomization(storeId: string): Promise<{ success: boolean; data: { store: any } }> {
+  //   try {
+  //     const response = await api.post(`/stores/${storeId}/customization/reset`);
+  //     return response.data;
+  //   } catch (error: any) {
+  //     throw error.response?.data || { success: false, message: 'Erro de conexão' };
+  //   }
+  // },
 };
 
 export default api;

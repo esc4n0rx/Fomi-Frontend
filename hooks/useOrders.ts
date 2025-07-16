@@ -14,33 +14,61 @@ export const useOrders = (filters?: OrderFilters) => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchOrders = useCallback(async () => {
-    if (!store?.id) return;
+    if (!store?.id) {
+      console.log('useOrders: Store ID não disponível, pulando busca de pedidos');
+      setIsLoading(false);
+      return;
+    }
     
     try {
       setIsLoading(true);
       setError(null);
+      console.log('useOrders: Buscando pedidos para store:', store.id, 'filtros:', filters);
       const response = await ordersApi.getOrders(store.id, filters);
-      setOrders(response.data.orders);
-      setPagination(response.data.pagination);
+      console.log('useOrders: Resposta da API:', response);
+      
+      // Verificar se a resposta tem a estrutura esperada
+      if (response.success && response.data) {
+        setOrders(response.data.orders || []);
+        setPagination(response.data.pagination);
+      } else {
+        console.error('useOrders: Estrutura de resposta inesperada:', response);
+        setOrders([]);
+        setError('Estrutura de resposta inesperada da API');
+      }
     } catch (err: any) {
+      console.error('useOrders: Erro ao buscar pedidos:', err);
       setError(err.message || 'Erro ao carregar pedidos');
-      console.error('Erro ao buscar pedidos:', err);
+      setOrders([]);
     } finally {
       setIsLoading(false);
     }
   }, [store?.id, filters]);
 
   const fetchStatistics = useCallback(async () => {
-    if (!store?.id) return;
+    if (!store?.id) {
+      console.log('useOrders: Store ID não disponível, pulando busca de estatísticas');
+      return;
+    }
     
     try {
+      console.log('useOrders: Buscando estatísticas para store:', store.id);
       const response = await ordersApi.getOrderStatistics(store.id, {
         data_inicio: filters?.data_inicio,
         data_fim: filters?.data_fim
       });
-      setStatistics(response.data.statistics);
+      console.log('useOrders: Estatísticas recebidas:', response);
+      
+      // Verificar se a resposta tem a estrutura esperada
+      if (response.success && response.data) {
+        setStatistics(response.data.statistics);
+      } else {
+        console.error('useOrders: Estrutura de estatísticas inesperada:', response);
+        // Não definir erro para estatísticas, apenas log
+      }
     } catch (err: any) {
-      console.error('Erro ao buscar estatísticas:', err);
+      console.error('useOrders: Erro ao buscar estatísticas:', err);
+      // Não definir erro para estatísticas, apenas log
     }
   }, [store?.id, filters?.data_inicio, filters?.data_fim]);
 
@@ -126,9 +154,18 @@ export const useOrders = (filters?: OrderFilters) => {
   }, [fetchOrders, fetchStatistics]);
 
   useEffect(() => {
-    fetchOrders();
-    fetchStatistics();
-  }, [fetchOrders, fetchStatistics]);
+    console.log('useOrders: useEffect - store mudou:', store?.id);
+    if (store?.id) {
+      fetchOrders();
+      fetchStatistics();
+    } else {
+      // Se não há store, limpar dados e parar loading
+      setOrders([]);
+      setStatistics(null);
+      setIsLoading(false);
+      setError(null);
+    }
+  }, [store?.id]); // Removido fetchOrders e fetchStatistics das dependências
 
   useEffect(() => {
     // Iniciar atualizações em tempo real quando a página estiver ativa
@@ -141,13 +178,17 @@ export const useOrders = (filters?: OrderFilters) => {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    startRealTimeUpdates();
+    
+    // Só iniciar atualizações em tempo real se tiver store
+    if (store?.id) {
+      startRealTimeUpdates();
+    }
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       stopRealTimeUpdates();
     };
-  }, [startRealTimeUpdates, stopRealTimeUpdates]);
+  }, [store?.id]); // Removido startRealTimeUpdates e stopRealTimeUpdates das dependências
 
   // Limpar intervalo quando o componente for desmontado
   useEffect(() => {

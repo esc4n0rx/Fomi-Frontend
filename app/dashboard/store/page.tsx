@@ -33,7 +33,7 @@ import { StoreImageUpload } from "@/components/store-image-upload";
 import { StorePreview } from "@/components/store-preview";
 import { ColorPicker } from "@/components/color-picker";
 import { FontSelector } from "@/components/font-selector";
-import { CustomizationTemplates } from "@/components/customization-templates";
+// import { CustomizationTemplates } from "@/components/customization-templates";
 import { toast } from "@/hooks/use-toast";
 
 export default function StorePage() {
@@ -71,8 +71,12 @@ export default function StorePage() {
 
   // Update form data when store data loads
   useEffect(() => {
+    console.log('StorePage - Dados da loja carregados:', store);
+    console.log('StorePage - Dados básicos:', basicInfo);
+    console.log('StorePage - Dados de customização:', customization);
+    
     if (store) {
-      setFormData({
+      const newFormData = {
         nome: store.nome || '',
         descricao: store.descricao || '',
         whatsapp: store.whatsapp || '',
@@ -85,20 +89,26 @@ export default function StorePage() {
         endereco_bairro: store.endereco_bairro || '',
         endereco_cidade: store.endereco_cidade || '',
         endereco_estado: store.endereco_estado || '',
-      });
-      setCustomizationData({
+      };
+      
+      const newCustomizationData = {
         cor_primaria: store.cor_primaria || '#FF6B35',
         cor_secundaria: store.cor_secundaria || '#F7931E',
         cor_texto: store.cor_texto || '#333333',
         cor_fundo: store.cor_fundo || '#FFFFFF',
         fonte_titulo: store.fonte_titulo || 'Roboto',
         fonte_texto: store.fonte_texto || 'Arial',
-      });
+      };
+      
+      console.log('StorePage - Atualizando formulário:', { newFormData, newCustomizationData });
+      setFormData(newFormData);
+      setCustomizationData(newCustomizationData);
     }
   }, [store]);
 
   // Update customization data when customization changes
   useEffect(() => {
+    console.log('StorePage - Customização atualizada:', customization);
     setCustomizationData(customization);
   }, [customization]);
 
@@ -137,9 +147,24 @@ export default function StorePage() {
   const displayStore = {
     nome: store?.nome || formData.nome || 'Minha Loja',
     descricao: store?.descricao || formData.descricao || '',
-    logo_url: store?.logo_url,
-    banner_url: store?.banner_url,
+    logo_url: store?.logo_url || undefined,
+    banner_url: store?.banner_url || undefined,
   };
+
+  // Verificar permissões
+  const canCustomizeColors = hasPermission('custom_colors');
+  const canCustomizeFonts = hasPermission('custom_fonts');
+  const canUploadLogo = hasPermission('logo_upload');
+  const canUploadBanner = hasPermission('banner_upload');
+
+  console.log('StorePage - Permissões:', {
+    canCustomizeColors,
+    canCustomizeFonts,
+    canUploadLogo,
+    canUploadBanner,
+    settings: settings?.permissions,
+    userPlan: settings?.user_plan
+  });
 
   if (loading || loadingSettings) {
     return (
@@ -202,14 +227,14 @@ export default function StorePage() {
                 <Button
                   variant="outline"
                   onClick={handleResetCustomization}
-                  disabled={saving || !hasPermission('custom_colors')}
+                  disabled={saving || !canCustomizeColors}
                 >
                   <RotateCcw className="h-4 w-4 mr-2" />
                   Resetar
                 </Button>
                 <Button
                   onClick={handleSaveCustomization}
-                  disabled={saving || !hasPermission('custom_colors')}
+                  disabled={saving || !canCustomizeColors}
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {saving ? 'Salvando...' : 'Salvar'}
@@ -224,11 +249,10 @@ export default function StorePage() {
             {/* Left Column - Configuration */}
             <div className="lg:col-span-2 space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="basic">Informações</TabsTrigger>
                   <TabsTrigger value="visual">Visual</TabsTrigger>
                   <TabsTrigger value="images">Imagens</TabsTrigger>
-                  <TabsTrigger value="templates">Templates</TabsTrigger>
                 </TabsList>
 
                 {/* Basic Information Tab */}
@@ -395,7 +419,7 @@ export default function StorePage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
                   >
-                    {!hasPermission('custom_colors') && (
+                    {!canCustomizeColors && (
                       <Card className="border-orange-200 bg-orange-50">
                         <CardContent className="pt-6">
                           <div className="flex items-center gap-2 text-orange-800 mb-2">
@@ -426,7 +450,7 @@ export default function StorePage() {
                             onChange={(color) => handleCustomizationChange('cor_primaria', color)}
                             label="Cor Primária"
                             description="Cor principal da loja (botões, links, destaques)"
-                            disabled={!hasPermission('custom_colors')}
+                            disabled={!canCustomizeColors}
                           />
                           
                           <ColorPicker
@@ -434,7 +458,7 @@ export default function StorePage() {
                             onChange={(color) => handleCustomizationChange('cor_secundaria', color)}
                             label="Cor Secundária"
                             description="Cor para elementos secundários e gradientes"
-                            disabled={!hasPermission('custom_colors')}
+                            disabled={!canCustomizeColors}
                           />
                         </div>
 
@@ -444,7 +468,7 @@ export default function StorePage() {
                             onChange={(color) => handleCustomizationChange('cor_texto', color)}
                             label="Cor do Texto"
                             description="Cor principal dos textos da loja"
-                            disabled={!hasPermission('custom_colors')}
+                            disabled={!canCustomizeColors}
                           />
                           
                           <ColorPicker
@@ -452,7 +476,7 @@ export default function StorePage() {
                             onChange={(color) => handleCustomizationChange('cor_fundo', color)}
                             label="Cor de Fundo"
                             description="Cor de fundo principal da loja"
-                            disabled={!hasPermission('custom_colors')}
+                            disabled={!canCustomizeColors}
                           />
                         </div>
                       </CardContent>
@@ -475,7 +499,7 @@ export default function StorePage() {
                             onChange={(font) => handleCustomizationChange('fonte_titulo', font)}
                             label="Fonte dos Títulos"
                             description="Fonte usada em títulos, cabeçalhos e destaques"
-                            disabled={!hasPermission('custom_fonts')}
+                            disabled={!canCustomizeFonts}
                           />
                           
                           <FontSelector
@@ -483,7 +507,7 @@ export default function StorePage() {
                             onChange={(font) => handleCustomizationChange('fonte_texto', font)}
                             label="Fonte do Texto"
                             description="Fonte usada em textos, descrições e conteúdo"
-                            disabled={!hasPermission('custom_fonts')}
+                            disabled={!canCustomizeFonts}
                           />
                         </div>
                       </CardContent>
@@ -499,40 +523,40 @@ export default function StorePage() {
                     transition={{ duration: 0.6, delay: 0.3 }}
                     className="space-y-6"
                   >
-                                         <StoreImageUpload
-                       type="logo"
-                       currentUrl={store?.logo_url}
-                       onUpload={uploadLogo}
-                       onRemove={removeLogo}
-                       uploading={uploading}
-                       hasPermission={hasPermission('logo_upload')}
-                       upgradeMessage={getUpgradeMessage('logo_upload')}
-                       specifications={{
-                         dimensions: "100x100 até 512x512px",
-                         formats: ["JPEG", "PNG", "WebP"],
-                         max_size: "2MB"
-                       }}
-                     />
+                    <StoreImageUpload
+                      type="logo"
+                      currentUrl={store?.logo_url || undefined}
+                      onUpload={uploadLogo}
+                      onRemove={removeLogo}
+                      uploading={uploading}
+                      hasPermission={canUploadLogo}
+                      upgradeMessage={getUpgradeMessage('logo_upload') || undefined}
+                      specifications={{
+                        dimensions: "100x100 até 512x512px",
+                        formats: ["JPEG", "PNG", "WebP"],
+                        max_size: "2MB"
+                      }}
+                    />
 
-                     <StoreImageUpload
-                       type="banner"
-                       currentUrl={store?.banner_url}
-                       onUpload={uploadBanner}
-                       onRemove={removeBanner}
-                       uploading={uploading}
-                       hasPermission={hasPermission('banner_upload')}
-                       upgradeMessage={getUpgradeMessage('banner_upload')}
-                       specifications={{
-                         dimensions: "800x200 até 1920x600px",
-                         formats: ["JPEG", "PNG", "WebP"],
-                         max_size: "5MB"
-                       }}
-                     />
+                    <StoreImageUpload
+                      type="banner"
+                      currentUrl={store?.banner_url || undefined}
+                      onUpload={uploadBanner}
+                      onRemove={removeBanner}
+                      uploading={uploading}
+                      hasPermission={canUploadBanner}
+                      upgradeMessage={getUpgradeMessage('banner_upload') || undefined}
+                      specifications={{
+                        dimensions: "800x200 até 1920x600px",
+                        formats: ["JPEG", "PNG", "WebP"],
+                        max_size: "5MB"
+                      }}
+                    />
                   </motion.div>
                 </TabsContent>
 
-                {/* Templates Tab */}
-                <TabsContent value="templates" className="space-y-6">
+                {/* Templates Tab - Temporariamente desabilitado */}
+                {/* <TabsContent value="templates" className="space-y-6">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -543,11 +567,11 @@ export default function StorePage() {
                       onApplyTemplate={applyTemplate}
                       onPreviewTemplate={handlePreviewTemplate}
                       loading={saving}
-                      hasPermission={hasPermission('custom_colors')}
+                      hasPermission={canCustomizeColors}
                       upgradeMessage={getUpgradeMessage('custom_colors')}
                     />
                   </motion.div>
-                </TabsContent>
+                </TabsContent> */}
               </Tabs>
             </div>
 
@@ -562,8 +586,8 @@ export default function StorePage() {
                 <StorePreview
                   storeName={displayStore.nome}
                   storeDescription={displayStore.descricao}
-                  logoUrl={displayStore.logo_url}
-                  bannerUrl={displayStore.banner_url}
+                  logoUrl={displayStore.logo_url || undefined}
+                  bannerUrl={displayStore.banner_url || undefined}
                   customization={currentCustomization}
                   isPreview={!!previewCustomization}
                 />

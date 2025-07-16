@@ -20,7 +20,17 @@ export default function DashboardPage() {
   const userMenuRef = useRef<HTMLDivElement>(null)
   
   // Buscar estatísticas de pedidos
-  const { statistics } = useOrders()
+  const { statistics, isLoading: ordersLoading } = useOrders()
+  
+  console.log('Dashboard - Estado atual:', {
+    user,
+    store,
+    isLoading,
+    hasStore,
+    hasChosenPlan,
+    statistics,
+    ordersLoading
+  })
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -33,28 +43,28 @@ export default function DashboardPage() {
     {
       title: "Pedidos Hoje",
       value: statistics?.total_pedidos?.toString() || "0",
-      change: statistics ? `${statistics.pedidos_por_status.pendente + statistics.pedidos_por_status.confirmado + statistics.pedidos_por_status.preparando} pendentes` : "0 pendentes",
+      change: statistics?.pedidos_por_status ? `${(statistics.pedidos_por_status.pendente || 0) + (statistics.pedidos_por_status.confirmado || 0) + (statistics.pedidos_por_status.preparando || 0)} pendentes` : "0 pendentes",
       changeType: "positive" as const,
       icon: ShoppingBag,
     },
     {
       title: "Faturamento",
-      value: statistics ? formatCurrency(statistics.total_vendas) : "R$ 0,00",
-      change: statistics ? `Ticket médio: ${formatCurrency(statistics.ticket_medio)}` : "R$ 0,00",
+      value: statistics?.total_vendas ? formatCurrency(statistics.total_vendas) : "R$ 0,00",
+      change: statistics?.ticket_medio ? `Ticket médio: ${formatCurrency(statistics.ticket_medio)}` : "R$ 0,00",
       changeType: "positive" as const,
       icon: DollarSign,
     },
     {
       title: "Pedidos Pendentes",
       value: statistics?.pedidos_por_status?.pendente?.toString() || "0",
-      change: statistics ? `${statistics.pedidos_por_status.confirmado} confirmados` : "0 confirmados",
+      change: statistics?.pedidos_por_status?.confirmado ? `${statistics.pedidos_por_status.confirmado} confirmados` : "0 confirmados",
       changeType: "positive" as const,
       icon: Users,
     },
     {
       title: "Pedidos Preparando",
       value: statistics?.pedidos_por_status?.preparando?.toString() || "0",
-      change: statistics ? `${statistics.pedidos_por_status.saiu_entrega} em entrega` : "0 em entrega",
+      change: statistics?.pedidos_por_status?.saiu_entrega ? `${statistics.pedidos_por_status.saiu_entrega} em entrega` : "0 em entrega",
       changeType: "positive" as const,
       icon: TrendingUp,
     },

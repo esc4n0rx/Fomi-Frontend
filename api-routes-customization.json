@@ -178,6 +178,37 @@
             "whatsapp": "formato brasileiro válido, opcional",
             "endereco_cep": "formato 00000-000, opcional",
             "endereco_estado": "2 caracteres maiúsculos, opcional"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "store": {
+                "id": "uuid",
+                "nome": "Nova Lanchonete",
+                "slug": "nova-lanchonete",
+                "descricao": "Descrição atualizada",
+                "whatsapp": "(11) 88888-8888",
+                "instagram": "@novalanchonete",
+                "facebook": "novalanchonete",
+                "endereco_cep": "12345-678",
+                "endereco_rua": "Rua Nova",
+                "endereco_numero": "456",
+                "endereco_complemento": "Loja 2",
+                "endereco_bairro": "Vila Nova",
+                "endereco_cidade": "Rio de Janeiro",
+                "endereco_estado": "RJ",
+                "logo_url": "https://res.cloudinary.com/...",
+                "banner_url": "https://res.cloudinary.com/...",
+                "cor_primaria": "#FF6B35",
+                "cor_secundaria": "#F7931E",
+                "cor_texto": "#333333",
+                "cor_fundo": "#FFFFFF",
+                "fonte_titulo": "Roboto",
+                "fonte_texto": "Arial",
+                "plano": "fomi_duplo",
+                "updated_at": "2025-01-01T00:00:00Z"
+              }
+            }
           }
         },
         "update_customization": {
@@ -208,6 +239,37 @@
             "fomi_simples": false,
             "fomi_duplo": true,
             "fomi_supremo": true
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "store": {
+                "id": "uuid",
+                "nome": "Minha Lanchonete",
+                "slug": "minha-lanchonete",
+                "descricao": "A melhor lanchonete da cidade",
+                "whatsapp": "(11) 99999-9999",
+                "instagram": "@minhalanchonete",
+                "facebook": "minhalanchonete",
+                "endereco_cep": "01234-567",
+                "endereco_rua": "Rua das Flores",
+                "endereco_numero": "123",
+                "endereco_complemento": "Sala 1",
+                "endereco_bairro": "Centro",
+                "endereco_cidade": "São Paulo",
+                "endereco_estado": "SP",
+                "logo_url": "https://res.cloudinary.com/...",
+                "banner_url": "https://res.cloudinary.com/...",
+                "cor_primaria": "#2563EB",
+                "cor_secundaria": "#1D4ED8",
+                "cor_texto": "#1F2937",
+                "cor_fundo": "#F9FAFB",
+                "fonte_titulo": "Georgia",
+                "fonte_texto": "Open Sans",
+                "plano": "fomi_duplo",
+                "updated_at": "2025-01-01T00:00:00Z"
+              }
+            }
           }
         },
         "upload_logo": {
@@ -238,6 +300,18 @@
             "fomi_simples": true,
             "fomi_duplo": true,
             "fomi_supremo": true
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "store": {
+                "id": "uuid",
+                "nome": "Minha Lanchonete",
+                "logo_url": "https://res.cloudinary.com/...",
+                "updated_at": "2025-01-01T00:00:00Z"
+              },
+              "logo_url": "https://res.cloudinary.com/..."
+            }
           }
         },
         "upload_banner": {
@@ -268,6 +342,18 @@
             "fomi_simples": false,
             "fomi_duplo": true,
             "fomi_supremo": true
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "store": {
+                "id": "uuid",
+                "nome": "Minha Lanchonete",
+                "banner_url": "https://res.cloudinary.com/...",
+                "updated_at": "2025-01-01T00:00:00Z"
+              },
+              "banner_url": "https://res.cloudinary.com/..."
+            }
           }
         },
         "remove_logo": {
@@ -276,6 +362,17 @@
           "description": "Remove logo da loja",
           "headers": {
             "Authorization": "Bearer {token}"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "store": {
+                "id": "uuid",
+                "nome": "Minha Lanchonete",
+                "logo_url": null,
+                "updated_at": "2025-01-01T00:00:00Z"
+              }
+            }
           }
         },
         "remove_banner": {
@@ -284,6 +381,17 @@
           "description": "Remove banner da loja",
           "headers": {
             "Authorization": "Bearer {token}"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "store": {
+                "id": "uuid",
+                "nome": "Minha Lanchonete",
+                "banner_url": null,
+                "updated_at": "2025-01-01T00:00:00Z"
+              }
+            }
           }
         },
         "get_templates": {
@@ -311,6 +419,36 @@
                     "fonte_titulo": "Roboto",
                     "fonte_texto": "Open Sans"
                   }
+                },
+                {
+                  "id": "classico",
+                  "name": "Clássico",
+                  "description": "Design tradicional e elegante",
+                  "preview_image": "/templates/classico.jpg",
+                  "available": true,
+                  "customization": {
+                    "cor_primaria": "#8B4513",
+                    "cor_secundaria": "#D2691E",
+                    "cor_texto": "#2F2F2F",
+                    "cor_fundo": "#F5F5DC",
+                    "fonte_titulo": "Georgia",
+                    "fonte_texto": "Times"
+                  }
+                },
+                {
+                  "id": "vibrante",
+                  "name": "Vibrante",
+                  "description": "Cores vivas e energéticas",
+                  "preview_image": "/templates/vibrante.jpg",
+                  "available": true,
+                  "customization": {
+                    "cor_primaria": "#FF6B35",
+                    "cor_secundaria": "#F7931E",
+                    "cor_texto": "#333333",
+                    "cor_fundo": "#FFFFFF",
+                    "fonte_titulo": "Arial",
+                    "fonte_texto": "Verdana"
+                  }
                 }
               ],
               "user_plan": "fomi_duplo",
@@ -329,6 +467,37 @@
           },
           "payload": {
             "templateId": "moderno"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "store": {
+                "id": "uuid",
+                "nome": "Minha Lanchonete",
+                "slug": "minha-lanchonete",
+                "descricao": "A melhor lanchonete da cidade",
+                "whatsapp": "(11) 99999-9999",
+                "instagram": "@minhalanchonete",
+                "facebook": "minhalanchonete",
+                "endereco_cep": "01234-567",
+                "endereco_rua": "Rua das Flores",
+                "endereco_numero": "123",
+                "endereco_complemento": "Sala 1",
+                "endereco_bairro": "Centro",
+                "endereco_cidade": "São Paulo",
+                "endereco_estado": "SP",
+                "logo_url": "https://res.cloudinary.com/...",
+                "banner_url": "https://res.cloudinary.com/...",
+                "cor_primaria": "#2563EB",
+                "cor_secundaria": "#1D4ED8",
+                "cor_texto": "#1F2937",
+                "cor_fundo": "#FFFFFF",
+                "fonte_titulo": "Roboto",
+                "fonte_texto": "Open Sans",
+                "plano": "fomi_duplo",
+                "updated_at": "2025-01-01T00:00:00Z"
+              }
+            }
           }
         },
         "preview_customization": {
@@ -343,6 +512,19 @@
             "cor_primaria": "#2563EB",
             "cor_secundaria": "#1D4ED8",
             "fonte_titulo": "Georgia"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "preview": {
+                "cor_primaria": "#2563EB",
+                "cor_secundaria": "#1D4ED8",
+                "cor_texto": "#333333",
+                "cor_fundo": "#FFFFFF",
+                "fonte_titulo": "Georgia",
+                "fonte_texto": "Arial"
+              }
+            }
           }
         },
         "reset_customization": {
@@ -351,6 +533,37 @@
           "description": "Reset personalização para padrões",
           "headers": {
             "Authorization": "Bearer {token}"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "store": {
+                "id": "uuid",
+                "nome": "Minha Lanchonete",
+                "slug": "minha-lanchonete",
+                "descricao": "A melhor lanchonete da cidade",
+                "whatsapp": "(11) 99999-9999",
+                "instagram": "@minhalanchonete",
+                "facebook": "minhalanchonete",
+                "endereco_cep": "01234-567",
+                "endereco_rua": "Rua das Flores",
+                "endereco_numero": "123",
+                "endereco_complemento": "Sala 1",
+                "endereco_bairro": "Centro",
+                "endereco_cidade": "São Paulo",
+                "endereco_estado": "SP",
+                "logo_url": "https://res.cloudinary.com/...",
+                "banner_url": "https://res.cloudinary.com/...",
+                "cor_primaria": "#FF6B35",
+                "cor_secundaria": "#F7931E",
+                "cor_texto": "#333333",
+                "cor_fundo": "#FFFFFF",
+                "fonte_titulo": "Roboto",
+                "fonte_texto": "Arial",
+                "plano": "fomi_duplo",
+                "updated_at": "2025-01-01T00:00:00Z"
+              }
+            }
           }
         }
       },
@@ -405,6 +618,13 @@
             "success": false,
             "message": "Loja não encontrada ou acesso negado"
           }
+        },
+        "unauthorized": {
+          "status": 401,
+          "body": {
+            "success": false,
+            "message": "Token de autenticação inválido ou expirado"
+          }
         }
       },
       "plan_limitations": {
@@ -426,6 +646,18 @@
           "allowed_features": ["all"],
           "restricted_features": [],
           "upgrade_messages": {}
+        }
+      },
+      "default_values": {
+        "colors": {
+          "cor_primaria": "#FF6B35",
+          "cor_secundaria": "#F7931E",
+          "cor_texto": "#333333",
+          "cor_fundo": "#FFFFFF"
+        },
+        "fonts": {
+          "fonte_titulo": "Roboto",
+          "fonte_texto": "Arial"
         }
       }
     }
