@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
 import Head from 'next/head';
+import { useSSE } from '@/hooks/useSSE';
+import { toast as customToast } from '@/hooks/use-toast';
 
 const API_BASE = 'https://api.fomi-eats.shop/api/v1';
 
@@ -72,6 +74,8 @@ export default async function PublicStorePage({ params }: { params: { slug: stri
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [promotions, setPromotions] = useState([]);
+  // Estado para controlar produtos visualizados/novos
+  const [recentProductIds, setRecentProductIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!store?.id) return;
@@ -91,6 +95,53 @@ export default async function PublicStorePage({ params }: { params: { slug: stri
       navigator.serviceWorker.register('/service-worker.js');
     }
   }, []);
+
+  // SSE integração (Client Only)
+  if (typeof window !== 'undefined' && store?.id) {
+    const tokenRaw = localStorage.getItem('auth_token');
+    const token = tokenRaw === null ? undefined : tokenRaw;
+    const { events } = useSSE(store.id, token);
+    useEffect(() => {
+      if (!events.length) return;
+      const lastEvent = events[events.length - 1];
+      if (lastEvent.type === 'webhook_event') {
+        if (lastEvent.event === 'store.viewed') {
+          customToast({
+            title: 'Nova visita na loja!',
+            description: `Alguém acessou sua loja agora mesmo.`,
+          });
+        }
+        if (lastEvent.event === 'store.product_viewed') {
+          customToast({
+            title: 'Produto visualizado',
+            description: `Produto: ${lastEvent.data.product?.nome}`,
+          });
+          if (lastEvent.data.product?.id) {
+            setRecentProductIds((ids) => [...new Set([...ids, lastEvent.data.product.id])]);
+            setTimeout(() => {
+              setRecentProductIds((ids) => ids.filter(id => id !== lastEvent.data.product.id));
+            }, 15000);
+          }
+          // Atualizar produtos (caso necessário)
+          getProducts(store.id, selectedCategory || undefined).then(setProducts);
+        }
+        if (lastEvent.event === 'order.created') {
+          customToast({
+            title: 'Novo pedido realizado!',
+            description: `Pedido #${lastEvent.data.order.numero_pedido} de ${lastEvent.data.order.cliente_nome}`,
+          });
+          // Atualizar produtos (estoque pode mudar)
+          getProducts(store.id, selectedCategory || undefined).then(setProducts);
+        }
+      }
+      if (lastEvent.type === 'notification') {
+        customToast({
+          title: 'Notificação',
+          description: lastEvent.message,
+        });
+      }
+    }, [events]);
+  }
 
   return (
     <>
@@ -173,7 +224,11 @@ export default async function PublicStorePage({ params }: { params: { slug: stri
               <div key={prod.id} className="rounded border p-4 flex gap-4 items-center bg-white">
                 <img src={prod.imagem_url || '/placeholder.jpg'} alt={prod.nome} className="w-20 h-20 object-cover rounded" />
                 <div className="flex-1">
-                  <div className="font-bold text-lg" style={{ color: 'var(--cor-primaria)' }}>{prod.nome}</div>
+                  <div className="font-bold text-lg" style={{ color: 'var(--cor-primaria)' }}>{prod.nome}
+                    {recentProductIds.includes(prod.id) && (
+                      <span className="ml-2 px-2 py-0.5 rounded-full bg-blue-500 text-white text-xs animate-pulse">Novo</span>
+                    )}
+                  </div>
                   <div className="text-sm text-gray-600">{prod.descricao}</div>
                   <div className="mt-1 font-bold text-base">R$ {prod.preco.toFixed(2)}</div>
                   {prod.preco_promocional && (

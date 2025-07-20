@@ -1,0 +1,667 @@
+{
+    "webhook_routes": {
+      "description": "Sistema de webhooks para notificações em tempo real",
+      "base_url": "/api/v1/webhooks",
+      "authentication": "Bearer JWT Token",
+      
+      "admin_routes": {
+        "get_available_events": {
+          "method": "GET",
+          "endpoint": "/events",
+          "description": "Lista todos os eventos disponíveis para webhooks",
+          "auth_required": true,
+          "headers": {
+            "Authorization": "Bearer {jwt_token}"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "events": [
+                {
+                  "key": "ORDER_CREATED",
+                  "event": "order.created",
+                  "description": "Disparado quando um novo pedido é criado"
+                },
+                {
+                  "key": "ORDER_UPDATED",
+                  "event": "order.updated", 
+                  "description": "Disparado quando um pedido é atualizado"
+                },
+                {
+                  "key": "ORDER_STATUS_CHANGED",
+                  "event": "order.status_changed",
+                  "description": "Disparado quando o status do pedido muda"
+                },
+                {
+                  "key": "ORDER_CANCELLED",
+                  "event": "order.cancelled",
+                  "description": "Disparado quando um pedido é cancelado"
+                },
+                {
+                  "key": "STORE_VIEWED",
+                  "event": "store.viewed",
+                  "description": "Disparado quando alguém acessa sua loja"
+                },
+                {
+                  "key": "STORE_PRODUCT_VIEWED",
+                  "event": "store.product_viewed",
+                  "description": "Disparado quando um produto é visualizado"
+                },
+                {
+                  "key": "PRODUCT_OUT_OF_STOCK",
+                  "event": "product.out_of_stock",
+                  "description": "Disparado quando um produto fica sem estoque"
+                },
+                {
+                  "key": "PRODUCT_LOW_STOCK",
+                  "event": "product.low_stock",
+                  "description": "Disparado quando um produto tem estoque baixo"
+                },
+                {
+                  "key": "SYSTEM_HEALTH",
+                  "event": "system.health_check",
+                  "description": "Evento de teste do sistema"
+                }
+              ]
+            }
+          }
+        },
+   
+        "list_store_webhooks": {
+          "method": "GET",
+          "endpoint": "/{storeId}",
+          "description": "Lista todos os webhooks da loja",
+          "auth_required": true,
+          "path_params": {
+            "storeId": "UUID da loja"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "webhooks": [
+                {
+                  "id": "550e8400-e29b-41d4-a716-446655440000",
+                  "store_id": "123e4567-e89b-12d3-a456-426614174000",
+                  "user_id": "123e4567-e89b-12d3-a456-426614174001",
+                  "nome": "Notificações de Pedidos",
+                  "url": "https://minha-app.com/webhooks/fomi",
+                  "eventos": ["order.created", "order.status_changed"],
+                  "ativo": true,
+                  "max_retries": 3,
+                  "timeout_seconds": 30,
+                  "total_envios": 150,
+                  "total_sucessos": 147,
+                  "total_falhas": 3,
+                  "ultimo_envio": "2024-01-20T10:30:00.000Z",
+                  "ultimo_sucesso": "2024-01-20T10:30:00.000Z",
+                  "ultima_falha": "2024-01-19T15:20:00.000Z",
+                  "created_at": "2024-01-15T09:00:00.000Z",
+                  "updated_at": "2024-01-20T10:30:00.000Z"
+                }
+              ]
+            }
+          }
+        },
+   
+        "create_webhook": {
+          "method": "POST",
+          "endpoint": "/{storeId}",
+          "description": "Cria um novo webhook para a loja",
+          "auth_required": true,
+          "path_params": {
+            "storeId": "UUID da loja"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}",
+            "Content-Type": "application/json"
+          },
+          "payload": {
+            "nome": "Notificações de Pedidos",
+            "url": "https://minha-app.com/webhooks/fomi",
+            "eventos": ["order.created", "order.updated", "order.status_changed"],
+            "max_retries": 3,
+            "timeout_seconds": 30
+          },
+          "response": {
+            "success": true,
+            "message": "Webhook criado com sucesso",
+            "data": {
+              "webhook": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "store_id": "123e4567-e89b-12d3-a456-426614174000",
+                "user_id": "123e4567-e89b-12d3-a456-426614174001",
+                "nome": "Notificações de Pedidos",
+                "url": "https://minha-app.com/webhooks/fomi",
+                "secret_token": "abc123def456...",
+                "eventos": ["order.created", "order.updated", "order.status_changed"],
+                "ativo": true,
+                "max_retries": 3,
+                "timeout_seconds": 30,
+                "total_envios": 0,
+                "total_sucessos": 0,
+                "total_falhas": 0,
+                "ultimo_envio": null,
+                "ultimo_sucesso": null,
+                "ultima_falha": null,
+                "created_at": "2024-01-20T10:30:00.000Z",
+                "updated_at": "2024-01-20T10:30:00.000Z"
+              }
+            }
+          }
+        },
+   
+        "get_webhook": {
+          "method": "GET",
+          "endpoint": "/{storeId}/{webhookId}",
+          "description": "Busca webhook específico",
+          "auth_required": true,
+          "path_params": {
+            "storeId": "UUID da loja",
+            "webhookId": "UUID do webhook"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "webhook": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "store_id": "123e4567-e89b-12d3-a456-426614174000",
+                "user_id": "123e4567-e89b-12d3-a456-426614174001",
+                "nome": "Notificações de Pedidos",
+                "url": "https://minha-app.com/webhooks/fomi",
+                "secret_token": "abc123def456...",
+                "eventos": ["order.created", "order.status_changed"],
+                "ativo": true,
+                "max_retries": 3,
+                "timeout_seconds": 30,
+                "total_envios": 150,
+                "total_sucessos": 147,
+                "total_falhas": 3,
+                "ultimo_envio": "2024-01-20T10:30:00.000Z",
+                "ultimo_sucesso": "2024-01-20T10:30:00.000Z",
+                "ultima_falha": "2024-01-19T15:20:00.000Z",
+                "created_at": "2024-01-15T09:00:00.000Z",
+                "updated_at": "2024-01-20T10:30:00.000Z"
+              }
+            }
+          }
+        },
+   
+        "update_webhook": {
+          "method": "PUT",
+          "endpoint": "/{storeId}/{webhookId}",
+          "description": "Atualiza webhook existente",
+          "auth_required": true,
+          "path_params": {
+            "storeId": "UUID da loja",
+            "webhookId": "UUID do webhook"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}",
+            "Content-Type": "application/json"
+          },
+          "payload": {
+            "nome": "Notificações Atualizadas",
+            "url": "https://nova-url.com/webhooks/fomi",
+            "eventos": ["order.created", "order.cancelled"],
+            "max_retries": 5,
+            "timeout_seconds": 45,
+            "ativo": true
+          },
+          "response": {
+            "success": true,
+            "message": "Webhook atualizado com sucesso",
+            "data": {
+              "webhook": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "store_id": "123e4567-e89b-12d3-a456-426614174000",
+                "nome": "Notificações Atualizadas",
+                "url": "https://nova-url.com/webhooks/fomi",
+                "eventos": ["order.created", "order.cancelled"],
+                "max_retries": 5,
+                "timeout_seconds": 45,
+                "ativo": true,
+                "updated_at": "2024-01-20T11:00:00.000Z"
+              }
+            }
+          }
+        },
+   
+        "regenerate_secret": {
+          "method": "POST",
+          "endpoint": "/{storeId}/{webhookId}/regenerate-secret",
+          "description": "Regenera o secret token do webhook",
+          "auth_required": true,
+          "path_params": {
+            "storeId": "UUID da loja",
+            "webhookId": "UUID do webhook"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}"
+          },
+          "response": {
+            "success": true,
+            "message": "Secret token regenerado com sucesso",
+            "data": {
+              "webhook": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "secret_token": "new_abc123def456...",
+                "updated_at": "2024-01-20T11:05:00.000Z"
+              },
+              "new_secret": "new_abc123def456..."
+            }
+          }
+        },
+   
+        "test_webhook": {
+          "method": "POST",
+          "endpoint": "/{storeId}/{webhookId}/test",
+          "description": "Testa o webhook enviando um evento de teste",
+          "auth_required": true,
+          "path_params": {
+            "storeId": "UUID da loja",
+            "webhookId": "UUID do webhook"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}"
+          },
+          "response": {
+            "success": true,
+            "message": "Webhook testado com sucesso",
+            "data": {
+              "test_passed": true
+            }
+          }
+        },
+   
+        "get_webhook_logs": {
+          "method": "GET",
+          "endpoint": "/{storeId}/{webhookId}/logs",
+          "description": "Busca logs de envios do webhook",
+          "auth_required": true,
+          "path_params": {
+            "storeId": "UUID da loja",
+            "webhookId": "UUID do webhook"
+          },
+          "query_params": {
+            "limit": "Número máximo de logs (padrão: 50)"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "logs": [
+                {
+                  "id": "log-123",
+                  "webhook_id": "550e8400-e29b-41d4-a716-446655440000",
+                  "evento": "order.created",
+                  "payload": {
+                    "id": "delivery-456",
+                    "event": "order.created",
+                    "timestamp": "2024-01-20T10:30:00.000Z",
+                    "data": {
+                      "order": {}
+                    }
+                  },
+                  "url": "https://minha-app.com/webhooks/fomi",
+                  "status_code": 200,
+                  "response_body": "{\"success\": true}",
+                  "response_time_ms": 245,
+                  "tentativa": 1,
+                  "sucesso": true,
+                  "erro": null,
+                  "enviado_em": "2024-01-20T10:30:00.000Z"
+                }
+              ]
+            }
+          }
+        },
+   
+        "delete_webhook": {
+          "method": "DELETE",
+          "endpoint": "/{storeId}/{webhookId}",
+          "description": "Desativa webhook",
+          "auth_required": true,
+          "path_params": {
+            "storeId": "UUID da loja",
+            "webhookId": "UUID do webhook"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}"
+          },
+          "response": {
+            "success": true,
+            "message": "Webhook desativado com sucesso"
+          }
+        }
+      },
+   
+      "webhook_payloads_sent": {
+        "description": "Formatos dos payloads enviados pelo sistema para os webhooks configurados",
+        
+        "order_created": {
+          "event": "order.created",
+          "headers": {
+            "Content-Type": "application/json",
+            "User-Agent": "Fomi-Webhooks/1.0",
+            "X-Fomi-Signature": "sha256=abc123def456...",
+            "X-Fomi-Event": "order.created",
+            "X-Fomi-Delivery": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "payload": {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "event": "order.created",
+            "timestamp": "2024-01-20T10:30:00.000Z",
+            "data": {
+              "order": {
+                "id": "pedido-123",
+                "numero_pedido": "202401200001",
+                "store_id": "123e4567-e89b-12d3-a456-426614174000",
+                "customer_id": "customer-456",
+                "status": "pendente",
+                "cliente_nome": "João Silva",
+                "cliente_telefone": "11999998888",
+                "cliente_email": "joao@email.com",
+                "endereco_rua": "Rua das Flores, 123",
+                "endereco_bairro": "Centro",
+                "endereco_cidade": "São Paulo",
+                "endereco_estado": "SP",
+                "endereco_cep": "01234-567",
+                "subtotal": 22.50,
+                "desconto": 2.50,
+                "taxa_entrega": 5.50,
+                "total": 25.50,
+                "metodo_pagamento": "dinheiro",
+                "troco_para": 30.00,
+                "tipo_entrega": "entrega",
+                "observacoes": "Sem cebola",
+                "tempo_estimado_min": 45,
+                "cupom_codigo": "DESCONTO10",
+                "cupom_desconto": 2.50,
+                "pedido_em": "2024-01-20T10:30:00.000Z",
+                "items": [
+                  {
+                    "id": "item-1",
+                    "product_id": "produto-123",
+                    "produto_nome": "Hambúrguer Clássico",
+                    "produto_preco": 15.00,
+                    "quantidade": 1,
+                    "preco_unitario": 15.00,
+                    "subtotal": 15.00,
+                    "observacoes": "Sem cebola"
+                  },
+                  {
+                    "id": "item-2",
+                    "product_id": "produto-456",
+                    "produto_nome": "Batata Frita",
+                    "produto_preco": 7.50,
+                    "quantidade": 1,
+                    "preco_unitario": 7.50,
+                    "subtotal": 7.50,
+                    "observacoes": null
+                  }
+                ],
+                "customer": {
+                  "id": "customer-456",
+                  "nome": "João Silva",
+                  "telefone": "11999998888",
+                  "email": "joao@email.com"
+                },
+                "store": {
+                  "id": "123e4567-e89b-12d3-a456-426614174000",
+                  "nome": "Hamburgeria do João",
+                  "telefone": "1133334444",
+                  "whatsapp": "11999997777"
+                }
+              },
+              "store_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+   
+        "order_status_changed": {
+          "event": "order.status_changed",
+          "headers": {
+            "Content-Type": "application/json",
+            "User-Agent": "Fomi-Webhooks/1.0",
+            "X-Fomi-Signature": "sha256=def456ghi789...",
+            "X-Fomi-Event": "order.status_changed",
+            "X-Fomi-Delivery": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "payload": {
+            "id": "550e8400-e29b-41d4-a716-446655440001",
+            "event": "order.status_changed",
+            "timestamp": "2024-01-20T10:35:00.000Z",
+            "data": {
+              "order": {
+                "id": "pedido-123",
+                "numero_pedido": "202401200001",
+                "status": "confirmado",
+                "confirmado_em": "2024-01-20T10:35:00.000Z",
+                "total": 25.50
+              },
+              "old_status": "pendente",
+              "new_status": "confirmado",
+              "store_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+   
+        "order_cancelled": {
+          "event": "order.cancelled",
+          "headers": {
+            "Content-Type": "application/json",
+            "User-Agent": "Fomi-Webhooks/1.0",
+            "X-Fomi-Signature": "sha256=ghi789jkl012...",
+            "X-Fomi-Event": "order.cancelled",
+            "X-Fomi-Delivery": "550e8400-e29b-41d4-a716-446655440002"
+          },
+          "payload": {
+            "id": "550e8400-e29b-41d4-a716-446655440002",
+            "event": "order.cancelled",
+            "timestamp": "2024-01-20T11:00:00.000Z",
+            "data": {
+              "order": {
+                "id": "pedido-124",
+                "numero_pedido": "202401200002",
+                "status": "cancelado",
+                "cancelado_em": "2024-01-20T11:00:00.000Z",
+                "motivo_cancelamento": "Cliente desistiu da compra"
+              },
+              "cancellation_reason": "Cliente desistiu da compra",
+              "store_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+   
+        "store_viewed": {
+          "event": "store.viewed",
+          "headers": {
+            "Content-Type": "application/json",
+            "User-Agent": "Fomi-Webhooks/1.0",
+            "X-Fomi-Signature": "sha256=jkl012mno345...",
+            "X-Fomi-Event": "store.viewed",
+            "X-Fomi-Delivery": "550e8400-e29b-41d4-a716-446655440003"
+          },
+          "payload": {
+            "id": "550e8400-e29b-41d4-a716-446655440003",
+            "event": "store.viewed",
+            "timestamp": "2024-01-20T10:25:00.000Z",
+            "data": {
+              "store": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "nome": "Hamburgeria do João",
+                "slug": "hamburgeria-do-joao"
+              },
+              "visitor": {
+                "ip": "192.168.1.100",
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "referrer": "https://google.com"
+              },
+              "store_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+   
+        "product_viewed": {
+          "event": "store.product_viewed",
+          "headers": {
+            "Content-Type": "application/json",
+            "User-Agent": "Fomi-Webhooks/1.0",
+            "X-Fomi-Signature": "sha256=mno345pqr678...",
+            "X-Fomi-Event": "store.product_viewed",
+            "X-Fomi-Delivery": "550e8400-e29b-41d4-a716-446655440004"
+          },
+          "payload": {
+            "id": "550e8400-e29b-41d4-a716-446655440004",
+            "event": "store.product_viewed",
+            "timestamp": "2024-01-20T10:28:00.000Z",
+            "data": {
+              "store": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "nome": "Hamburgeria do João",
+                "slug": "hamburgeria-do-joao"
+              },
+              "product": {
+                "id": "produto-123",
+                "nome": "Hambúrguer Clássico",
+                "preco": 15.00
+              },
+              "visitor": {
+                "ip": "192.168.1.100",
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "referrer": "https://hamburgeria-do-joao.fomi.app"
+              },
+              "store_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+   
+        "webhook_test": {
+          "event": "webhook.test",
+          "headers": {
+            "Content-Type": "application/json",
+            "User-Agent": "Fomi-Webhooks/1.0",
+            "X-Fomi-Signature": "sha256=test123signature...",
+            "X-Fomi-Event": "webhook.test",
+            "X-Fomi-Delivery": "550e8400-e29b-41d4-a716-446655440999"
+          },
+          "payload": {
+            "id": "550e8400-e29b-41d4-a716-446655440999",
+            "event": "webhook.test",
+            "timestamp": "2024-01-20T12:00:00.000Z",
+            "data": {
+              "message": "Este é um webhook de teste do Fomi",
+              "webhook_id": "550e8400-e29b-41d4-a716-446655440000",
+              "store_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        }
+      },
+   
+      "public_triggers": {
+        "description": "Rotas públicas que disparam eventos de webhook automaticamente",
+        
+        "view_store": {
+          "method": "GET",
+          "endpoint": "/api/v1/public/store/{slug}",
+          "description": "Visualizar loja pública - dispara evento store.viewed",
+          "auth_required": false,
+          "path_params": {
+            "slug": "Slug da loja"
+          },
+          "triggered_events": ["store.viewed"],
+          "example_request": "GET /api/v1/public/store/hamburgeria-do-joao"
+        },
+   
+        "view_product": {
+          "method": "GET", 
+          "endpoint": "/api/v1/public/store/{storeId}/products/{productId}",
+          "description": "Visualizar produto específico - dispara evento store.product_viewed",
+          "auth_required": false,
+          "path_params": {
+            "storeId": "UUID da loja",
+            "productId": "UUID do produto"
+          },
+          "triggered_events": ["store.product_viewed"],
+          "example_request": "GET /api/v1/public/store/123e4567-e89b-12d3-a456-426614174000/products/produto-123"
+        },
+   
+        "create_order": {
+          "method": "POST",
+          "endpoint": "/api/v1/public/orders/{storeId}",
+          "description": "Criar pedido - dispara evento order.created",
+          "auth_required": false,
+          "path_params": {
+            "storeId": "UUID da loja"
+          },
+          "triggered_events": ["order.created"],
+          "example_request": "POST /api/v1/public/orders/123e4567-e89b-12d3-a456-426614174000"
+        }
+      },
+   
+      "admin_triggers": {
+        "description": "Rotas administrativas que disparam eventos de webhook",
+        
+        "update_order_status": {
+          "method": "PATCH",
+          "endpoint": "/api/v1/orders/{storeId}/{orderId}/status",
+          "description": "Atualizar status do pedido - dispara eventos order.status_changed, order.updated ou order.cancelled",
+          "auth_required": true,
+          "path_params": {
+            "storeId": "UUID da loja",
+            "orderId": "UUID do pedido"
+          },
+          "triggered_events": ["order.status_changed", "order.updated", "order.cancelled"],
+          "example_request": "PATCH /api/v1/orders/123e4567-e89b-12d3-a456-426614174000/pedido-123/status"
+        }
+      },
+   
+      "security": {
+        "signature_verification": {
+          "description": "Como verificar a assinatura dos webhooks recebidos",
+          "algorithm": "HMAC SHA-256",
+          "header": "X-Fomi-Signature",
+          "format": "sha256={hash}",
+          "verification_steps": [
+            "1. Obter o payload JSON como string",
+            "2. Criar HMAC SHA-256 usando seu secret_token",
+            "3. Comparar com a signature recebida no header",
+            "4. Usar comparação timing-safe para evitar timing attacks"
+          ],
+          "example_verification": {
+            "node_js": "const crypto = require('crypto'); const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex'); const isValid = crypto.timingSafeEqual(Buffer.from(`sha256=${signature}`), Buffer.from(receivedSignature));"
+          }
+        },
+        
+        "retry_policy": {
+          "description": "Política de retry automático em caso de falha",
+          "max_retries": "Configurável por webhook (padrão: 3)",
+          "backoff_strategy": "Exponencial: 1s, 2s, 4s, 8s...",
+          "max_delay": "30 segundos",
+          "timeout": "Configurável por webhook (padrão: 30s)",
+          "success_codes": [200, 201, 202, 204],
+          "retry_conditions": ["Timeout", "Status 5xx", "Erro de conexão"]
+        },
+   
+        "recommended_response": {
+          "description": "Resposta recomendada do seu endpoint para webhooks",
+          "status_code": 200,
+          "content_type": "application/json",
+          "body": {
+            "success": true,
+            "message": "Webhook processado com sucesso"
+          },
+          "processing": "Processar de forma assíncrona se necessário",
+          "timeout": "Responder em até 30 segundos"
+        }
+      }
+    }
+   }

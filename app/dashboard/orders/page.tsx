@@ -14,6 +14,10 @@ import { Order } from "@/types/orders"
 import { toast, Toaster } from "sonner"
 import { OrderDetailsModal } from "@/components/order-details-modal"
 import { OrderPrint } from "@/components/order-print"
+import { useSSE } from '@/hooks/useSSE';
+import { useAuth } from '@/hooks/useAuth';
+import { toast as customToast } from '@/hooks/use-toast';
+import React from "react";
 
 export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -26,6 +30,55 @@ export default function OrdersPage() {
     status: selectedStatus === "todos" ? undefined : selectedStatus || undefined
   })
   
+  const { store } = useAuth();
+  const storeId = store?.id || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('store_data') || '{}')?.id : undefined);
+  const tokenRaw = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : undefined;
+  const token = tokenRaw === null ? undefined : tokenRaw;
+  const { isConnected, events } = useSSE(storeId, token);
+
+  // Estado para controlar IDs de pedidos recém-chegados
+  const [newOrderIds, setNewOrderIds] = React.useState<string[]>([]);
+
+  // Notificações SSE + atualização automática
+  React.useEffect(() => {
+    if (!events.length) return;
+    const lastEvent = events[events.length - 1];
+    if (lastEvent.type === 'webhook_event') {
+      if (lastEvent.event === 'order.created') {
+        customToast({
+          title: 'Novo pedido recebido!',
+          description: `Pedido #${lastEvent.data.order.numero_pedido} de ${lastEvent.data.order.cliente_nome} - Total: R$ ${lastEvent.data.order.total.toFixed(2)}`,
+        });
+        setNewOrderIds((ids) => [...ids, lastEvent.data.order.id]);
+        refresh();
+        // Remover badge "Novo" após 20s
+        setTimeout(() => {
+          setNewOrderIds((ids) => ids.filter(id => id !== lastEvent.data.order.id));
+        }, 20000);
+      }
+      if (lastEvent.event === 'order.status_changed') {
+        customToast({
+          title: 'Status do pedido alterado',
+          description: `Pedido #${lastEvent.data.order.numero_pedido} agora está: ${lastEvent.data.new_status}`,
+        });
+        refresh();
+      }
+      if (lastEvent.event === 'order.cancelled') {
+        customToast({
+          title: 'Pedido cancelado',
+          description: `Pedido #${lastEvent.data.order.numero_pedido} foi cancelado. Motivo: ${lastEvent.data.cancellation_reason}`,
+        });
+        refresh();
+      }
+    }
+    if (lastEvent.type === 'notification') {
+      customToast({
+        title: 'Notificação',
+        description: lastEvent.message,
+      });
+    }
+  }, [events]);
+
   console.log('OrdersPage - Estado atual:', {
     orders: orders?.length,
     statistics,
@@ -145,6 +198,7 @@ export default function OrdersPage() {
                       • {statistics.total_pedidos || 0} pedidos • {statistics.total_vendas ? formatCurrency(statistics.total_vendas) : 'R$ 0,00'} em vendas
                     </span>
                   )}
+                  <span className={`ml-4 text-xs font-semibold ${isConnected ? 'text-green-600' : 'text-red-500'}`}>SSE: {isConnected ? 'Conectado' : 'Desconectado'}</span>
                 </p>
               </div>
 
@@ -233,6 +287,9 @@ export default function OrdersPage() {
                           <Badge className={statusConfig[order.status as keyof typeof statusConfig].color}>
                             {statusConfig[order.status as keyof typeof statusConfig].label}
                           </Badge>
+                          {newOrderIds.includes(order.id) && (
+                            <span className="ml-2 px-2 py-0.5 rounded-full bg-green-500 text-white text-xs animate-pulse">Novo</span>
+                          )}
                           <span className="text-sm text-gray-500 flex items-center">
                             <Clock className="w-3 h-3 mr-1" />
                             {formatDate(order.pedido_em)}

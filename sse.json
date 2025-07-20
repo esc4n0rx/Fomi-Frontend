@@ -1,0 +1,497 @@
+{
+    "sse_documentation": {
+      "description": "Server-Sent Events (SSE) para notificações em tempo real",
+      "base_url": "/api/v1/sse",
+      "protocol": "HTTP/1.1 com Content-Type: text/event-stream",
+      
+      "connection": {
+        "establish_connection": {
+          "method": "GET",
+          "endpoint": "/connect/{storeId}",
+          "description": "Estabelece conexão SSE para receber eventos em tempo real",
+          "auth_methods": [
+            {
+              "type": "Query Parameter",
+              "format": "?token={jwt_token}",
+              "example": "/connect/123e4567-e89b-12d3-a456-426614174000?token=eyJhbGciOiJIUzI1NiIs..."
+            },
+            {
+              "type": "Authorization Header",
+              "format": "Authorization: Bearer {jwt_token}",
+              "note": "Menos comum em SSE, preferir query parameter"
+            }
+          ],
+          "path_params": {
+            "storeId": "UUID da loja que você quer monitorar"
+          },
+          "headers": {
+            "Accept": "text/event-stream",
+            "Cache-Control": "no-cache"
+          },
+          "response": {
+            "status": 200,
+            "content_type": "text/event-stream",
+            "connection": "keep-alive",
+            "note": "Conexão mantida aberta indefinidamente"
+          },
+          "javascript_example": {
+            "code": "const eventSource = new EventSource('http://localhost:3000/api/v1/sse/connect/123e4567-e89b-12d3-a456-426614174000?token=eyJhbGciOiJIUzI1NiIs...');"
+          },
+          "curl_example": {
+            "code": "curl -N -H 'Accept: text/event-stream' 'http://localhost:3000/api/v1/sse/connect/123e4567-e89b-12d3-a456-426614174000?token=eyJhbGciOiJIUzI1NiIs...'"
+          }
+        }
+      },
+   
+      "events_received": {
+        "description": "Tipos de eventos que você receberá via SSE",
+        
+        "connection_established": {
+          "when": "Imediatamente após conectar",
+          "frequency": "Uma vez por conexão",
+          "payload": {
+            "type": "connection_established",
+            "message": "Conexão SSE estabelecida com sucesso",
+            "store_id": "123e4567-e89b-12d3-a456-426614174000",
+            "user_id": "user-456",
+            "timestamp": "2024-01-20T10:30:00.000Z",
+            "available_events": [
+              "order.created",
+              "order.updated", 
+              "order.status_changed",
+              "order.cancelled",
+              "store.viewed",
+              "store.product_viewed",
+              "product.out_of_stock",
+              "product.low_stock",
+              "system.health_check"
+            ]
+          }
+        },
+   
+        "heartbeat": {
+          "when": "A cada 30 segundos",
+          "frequency": "Contínuo",
+          "purpose": "Manter conexão viva",
+          "payload": {
+            "type": "heartbeat",
+            "timestamp": "2024-01-20T10:30:30.000Z"
+          }
+        },
+   
+        "order_created": {
+          "when": "Cliente faz novo pedido",
+          "frequency": "Por pedido",
+          "payload": {
+            "type": "webhook_event",
+            "event": "order.created",
+            "data": {
+              "order": {
+                "id": "pedido-123",
+                "numero_pedido": "202401200001",
+                "store_id": "123e4567-e89b-12d3-a456-426614174000",
+                "customer_id": "customer-456",
+                "status": "pendente",
+                "cliente_nome": "João Silva",
+                "cliente_telefone": "11999998888",
+                "cliente_email": "joao@email.com",
+                "endereco_rua": "Rua das Flores, 123",
+                "endereco_bairro": "Centro",
+                "endereco_cidade": "São Paulo",
+                "endereco_estado": "SP",
+                "endereco_cep": "01234-567",
+                "subtotal": 22.50,
+                "desconto": 2.50,
+                "taxa_entrega": 5.50,
+                "total": 25.50,
+                "metodo_pagamento": "dinheiro",
+                "troco_para": 30.00,
+                "tipo_entrega": "entrega",
+                "observacoes": "Sem cebola",
+                "tempo_estimado_min": 45,
+                "cupom_codigo": "DESCONTO10",
+                "cupom_desconto": 2.50,
+                "pedido_em": "2024-01-20T10:30:00.000Z",
+                "items": [
+                  {
+                    "id": "item-1",
+                    "product_id": "produto-123",
+                    "produto_nome": "Hambúrguer Clássico",
+                    "produto_preco": 15.00,
+                    "quantidade": 1,
+                    "preco_unitario": 15.00,
+                    "subtotal": 15.00,
+                    "observacoes": "Sem cebola"
+                  }
+                ],
+                "customer": {
+                  "id": "customer-456",
+                  "nome": "João Silva",
+                  "telefone": "11999998888"
+                }
+              },
+              "store_id": "123e4567-e89b-12d3-a456-426614174000"
+            },
+            "timestamp": "2024-01-20T10:30:00.000Z"
+          }
+        },
+   
+        "order_status_changed": {
+          "when": "Status do pedido é alterado",
+          "frequency": "Por mudança de status",
+          "payload": {
+            "type": "webhook_event",
+            "event": "order.status_changed",
+            "data": {
+              "order": {
+                "id": "pedido-123",
+                "numero_pedido": "202401200001",
+                "status": "confirmado",
+                "confirmado_em": "2024-01-20T10:35:00.000Z",
+                "total": 25.50,
+                "cliente_nome": "João Silva"
+              },
+              "old_status": "pendente",
+              "new_status": "confirmado",
+              "store_id": "123e4567-e89b-12d3-a456-426614174000"
+            },
+            "timestamp": "2024-01-20T10:35:00.000Z"
+          }
+        },
+   
+        "order_cancelled": {
+          "when": "Pedido é cancelado",
+          "frequency": "Por cancelamento",
+          "payload": {
+            "type": "webhook_event",
+            "event": "order.cancelled",
+            "data": {
+              "order": {
+                "id": "pedido-124",
+                "numero_pedido": "202401200002",
+                "status": "cancelado",
+                "cancelado_em": "2024-01-20T11:00:00.000Z",
+                "motivo_cancelamento": "Cliente desistiu da compra",
+                "total": 18.50
+              },
+              "cancellation_reason": "Cliente desistiu da compra",
+              "store_id": "123e4567-e89b-12d3-a456-426614174000"
+            },
+            "timestamp": "2024-01-20T11:00:00.000Z"
+          }
+        },
+   
+        "store_viewed": {
+          "when": "Alguém acessa sua loja",
+          "frequency": "Por visita",
+          "payload": {
+            "type": "webhook_event",
+            "event": "store.viewed",
+            "data": {
+              "store": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "nome": "Hamburgeria do João",
+                "slug": "hamburgeria-do-joao"
+              },
+              "visitor": {
+                "ip": "192.168.1.100",
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "referrer": "https://google.com"
+              },
+              "store_id": "123e4567-e89b-12d3-a456-426614174000"
+            },
+            "timestamp": "2024-01-20T10:25:00.000Z"
+          }
+        },
+   
+        "product_viewed": {
+          "when": "Produto específico é visualizado",
+          "frequency": "Por visualização",
+          "payload": {
+            "type": "webhook_event",
+            "event": "store.product_viewed",
+            "data": {
+              "store": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "nome": "Hamburgeria do João",
+                "slug": "hamburgeria-do-joao"
+              },
+              "product": {
+                "id": "produto-123",
+                "nome": "Hambúrguer Clássico",
+                "preco": 15.00
+              },
+              "visitor": {
+                "ip": "192.168.1.100",
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "referrer": "https://hamburgeria-do-joao.fomi.app"
+              },
+              "store_id": "123e4567-e89b-12d3-a456-426614174000"
+            },
+            "timestamp": "2024-01-20T10:28:00.000Z"
+          }
+        },
+   
+        "notification": {
+          "when": "Sistema envia notificação",
+          "frequency": "Conforme necessário",
+          "payload": {
+            "type": "notification",
+            "level": "success",
+            "message": "Pedido #202401200001 foi confirmado com sucesso!",
+            "timestamp": "2024-01-20T10:35:00.000Z"
+          },
+          "levels": ["info", "success", "warning", "error"]
+        },
+   
+        "custom_event": {
+          "when": "Evento personalizado é enviado",
+          "frequency": "Conforme solicitado",
+          "payload": {
+            "type": "custom_event",
+            "event": "store_analytics_update",
+            "data": {
+              "daily_orders": 15,
+              "daily_revenue": 387.50,
+              "avg_order_value": 25.83
+            },
+            "timestamp": "2024-01-20T23:59:59.000Z"
+          }
+        },
+   
+        "test_event": {
+          "when": "Teste de conexão é executado",
+          "frequency": "Manual",
+          "payload": {
+            "type": "test",
+            "message": "Este é um evento de teste SSE",
+            "timestamp": "2024-01-20T12:00:00.000Z"
+          }
+        }
+      },
+   
+      "management_routes": {
+        "description": "Rotas para gerenciar conexões SSE e enviar eventos",
+        "auth_required": "Bearer JWT Token",
+   
+        "get_stats": {
+          "method": "GET",
+          "endpoint": "/stats",
+          "description": "Obtém estatísticas das conexões SSE ativas",
+          "headers": {
+            "Authorization": "Bearer {jwt_token}"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "stats": {
+                "total_stores": 5,
+                "total_connections": 12,
+                "stores": [
+                  {
+                    "store_id": "123e4567-e89b-12d3-a456-426614174000",
+                    "connections": 3
+                  },
+                  {
+                    "store_id": "456e7890-e12b-34d5-a678-901234567890",
+                    "connections": 2
+                  }
+                ]
+              }
+            }
+          }
+        },
+   
+        "test_connection": {
+          "method": "POST",
+          "endpoint": "/test/{storeId}",
+          "description": "Envia evento de teste para todas as conexões da loja",
+          "path_params": {
+            "storeId": "UUID da loja"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}"
+          },
+          "response": {
+            "success": true,
+            "message": "Evento de teste enviado via SSE"
+          }
+        },
+   
+        "send_notification": {
+          "method": "POST",
+          "endpoint": "/notify/{storeId}",
+          "description": "Envia notificação personalizada para a loja",
+          "path_params": {
+            "storeId": "UUID da loja"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}",
+            "Content-Type": "application/json"
+          },
+          "payload": {
+            "message": "Sua loja teve 10 visualizações na última hora!",
+            "level": "info"
+          },
+          "response": {
+            "success": true,
+            "message": "Notificação enviada via SSE"
+          }
+        },
+   
+        "send_custom_event": {
+          "method": "POST",
+          "endpoint": "/event/{storeId}",
+          "description": "Envia evento personalizado para a loja",
+          "path_params": {
+            "storeId": "UUID da loja"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}",
+            "Content-Type": "application/json"
+          },
+          "payload": {
+            "event_type": "daily_report",
+            "data": {
+              "orders_today": 25,
+              "revenue_today": 634.75,
+              "top_product": "Hambúrguer Clássico"
+            }
+          },
+          "response": {
+            "success": true,
+            "message": "Evento enviado via SSE",
+            "event_type": "daily_report"
+          }
+        },
+   
+        "disconnect_store": {
+          "method": "DELETE",
+          "endpoint": "/disconnect/{storeId}",
+          "description": "Força desconexão de todas as conexões da loja",
+          "path_params": {
+            "storeId": "UUID da loja"
+          },
+          "headers": {
+            "Authorization": "Bearer {jwt_token}"
+          },
+          "response": {
+            "success": true,
+            "message": "Todas as conexões da loja foram fechadas"
+          }
+        }
+      },
+   
+      "frontend_implementation": {
+        "vanilla_javascript": {
+          "connect": {
+            "code": "// Conectar ao SSE\nconst token = localStorage.getItem('auth_token');\nconst storeId = 'sua-store-id';\n\nconst eventSource = new EventSource(\n  `http://localhost:3000/api/v1/sse/connect/${storeId}?token=${token}`\n);\n\n// Escutar todos os eventos\neventSource.onmessage = function(event) {\n  const data = JSON.parse(event.data);\n  console.log('Evento SSE:', data);\n  \n  handleSSEEvent(data);\n};\n\n// Tratar erros\neventSource.onerror = function(error) {\n  console.error('Erro SSE:', error);\n  \n  // Reconexão automática acontece automaticamente\n  // Mas você pode adicionar lógica personalizada aqui\n};\n\n// Fechar conexão quando necessário\n// eventSource.close();"
+          },
+          "event_handler": {
+            "code": "function handleSSEEvent(data) {\n  switch(data.type) {\n    case 'connection_established':\n      console.log('✅ Conectado ao SSE');\n      showNotification('Conectado!', 'success');\n      break;\n      \n    case 'webhook_event':\n      handleWebhookEvent(data.event, data.data);\n      break;\n      \n    case 'notification':\n      showNotification(data.message, data.level);\n      break;\n      \n    case 'heartbeat':\n      // Opcional: mostrar indicador de conexão ativa\n      updateConnectionStatus('connected');\n      break;\n      \n    case 'test':\n      console.log('🧪 Teste SSE:', data.message);\n      break;\n      \n    case 'custom_event':\n      handleCustomEvent(data.event, data.data);\n      break;\n  }\n}\n\nfunction handleWebhookEvent(eventType, eventData) {\n  switch(eventType) {\n    case 'order.created':\n      showNewOrderNotification(eventData.order);\n      updateOrdersList();\n      playNotificationSound();\n      break;\n      \n    case 'order.status_changed':\n      updateOrderStatus(eventData.order.id, eventData.new_status);\n      break;\n      \n    case 'order.cancelled':\n      showOrderCancelledNotification(eventData.order);\n      break;\n      \n    case 'store.viewed':\n      incrementVisitorCounter();\n      break;\n      \n    case 'store.product_viewed':\n      updateProductViews(eventData.product.id);\n      break;\n  }\n}"
+          }
+        },
+   
+        "react_example": {
+          "hook": {
+            "code": "// Hook personalizado para SSE\nimport { useEffect, useRef, useState } from 'react';\n\nexport function useSSE(storeId, token) {\n  const [isConnected, setIsConnected] = useState(false);\n  const [events, setEvents] = useState([]);\n  const eventSourceRef = useRef(null);\n\n  useEffect(() => {\n    if (!storeId || !token) return;\n\n    const url = `http://localhost:3000/api/v1/sse/connect/${storeId}?token=${token}`;\n    eventSourceRef.current = new EventSource(url);\n\n    eventSourceRef.current.onmessage = (event) => {\n      const data = JSON.parse(event.data);\n      \n      if (data.type === 'connection_established') {\n        setIsConnected(true);\n      }\n      \n      setEvents(prev => [...prev.slice(-49), data]); // Manter últimos 50 eventos\n    };\n\n    eventSourceRef.current.onerror = () => {\n      setIsConnected(false);\n    };\n\n    return () => {\n      eventSourceRef.current?.close();\n    };\n  }, [storeId, token]);\n\n  return { isConnected, events };\n}"
+          },
+          "component": {
+            "code": "// Componente para exibir notificações\nimport { useSSE } from './useSSE';\n\nexport function SSENotifications({ storeId }) {\n  const token = localStorage.getItem('auth_token');\n  const { isConnected, events } = useSSE(storeId, token);\n  \n  const newOrders = events.filter(e => \n    e.type === 'webhook_event' && e.event === 'order.created'\n  );\n\n  return (\n    <div className=\"sse-notifications\">\n      <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>\n        {isConnected ? '🟢 Conectado' : '🔴 Desconectado'}\n      </div>\n      \n      {newOrders.map((orderEvent, index) => (\n        <div key={index} className=\"new-order-notification\">\n          🔔 Novo pedido: #{orderEvent.data.order.numero_pedido}\n          <br />\n          Cliente: {orderEvent.data.order.cliente_nome}\n          <br />\n          Total: R$ {orderEvent.data.order.total.toFixed(2)}\n        </div>\n      ))}\n    </div>\n  );\n}"
+          }
+        },
+   
+        "vue_example": {
+          "composable": {
+            "code": "// Composable Vue 3\nimport { ref, onMounted, onUnmounted } from 'vue';\n\nexport function useSSE(storeId, token) {\n  const isConnected = ref(false);\n  const events = ref([]);\n  let eventSource = null;\n\n  onMounted(() => {\n    if (!storeId.value || !token.value) return;\n\n    const url = `http://localhost:3000/api/v1/sse/connect/${storeId.value}?token=${token.value}`;\n    eventSource = new EventSource(url);\n\n    eventSource.onmessage = (event) => {\n      const data = JSON.parse(event.data);\n      \n      if (data.type === 'connection_established') {\n        isConnected.value = true;\n      }\n      \n      events.value.push(data);\n      \n      // Manter apenas últimos 50 eventos\n      if (events.value.length > 50) {\n        events.value = events.value.slice(-50);\n      }\n    };\n\n    eventSource.onerror = () => {\n      isConnected.value = false;\n    };\n  });\n\n  onUnmounted(() => {\n    eventSource?.close();\n  });\n\n  return { isConnected, events };\n}"
+          }
+        }
+      },
+   
+      "error_handling": {
+        "connection_errors": {
+          "unauthorized": {
+            "status": 401,
+            "response": "Token inválido ou expirado",
+            "action": "Renovar token e reconectar"
+          },
+          "forbidden": {
+            "status": 403,
+            "response": "Acesso negado à loja",
+            "action": "Verificar permissões"
+          },
+          "not_found": {
+            "status": 404,
+            "response": "Loja não encontrada",
+            "action": "Verificar storeId"
+          },
+          "rate_limited": {
+            "status": 429,
+            "response": "Muitas conexões SSE",
+            "action": "Aguardar e tentar novamente"
+          }
+        },
+        "automatic_reconnection": {
+          "description": "EventSource reconecta automaticamente",
+          "retry_interval": "3 segundos (padrão do navegador)",
+          "max_retries": "Infinito (até fechar manualmente)",
+          "custom_reconnection": {
+            "code": "eventSource.onerror = function(error) {\n  console.log('Conexão perdida, reconectando...');\n  \n  // Opcional: implementar lógica personalizada\n  setTimeout(() => {\n    if (eventSource.readyState === EventSource.CLOSED) {\n      // Reconectar manualmente se necessário\n      connectToSSE();\n    }\n  }, 5000);\n};"
+          }
+        }
+      },
+   
+      "best_practices": {
+        "performance": [
+          "Limite o número de eventos armazenados em memória",
+          "Use debounce para atualizações de UI frequentes",
+          "Implemente paginação para listas de pedidos",
+          "Cache dados localmente para reduzir re-renderizações"
+        ],
+        "user_experience": [
+          "Mostre indicador visual de conexão ativa/inativa",
+          "Implemente notificações sonoras para novos pedidos",
+          "Use animações suaves para novos itens",
+          "Mantenha histórico de eventos para consulta"
+        ],
+        "security": [
+          "Sempre use HTTPS em produção",
+          "Renove tokens JWT antes de expirarem",
+          "Não exponha dados sensíveis nos eventos",
+          "Valide permissões no backend antes de enviar eventos"
+        ],
+        "debugging": [
+          "Use console.log para monitorar eventos recebidos",
+          "Implemente logs estruturados no frontend",
+          "Monitore status de conexão constantemente",
+          "Use ferramentas de desenvolvedor para inspecionar SSE"
+        ]
+      },
+   
+      "production_considerations": {
+        "scalability": {
+          "load_balancing": "Use sticky sessions ou Redis para compartilhar conexões",
+          "memory_usage": "Monitor uso de memória do servidor com muitas conexões",
+          "connection_limits": "Configure limites de conexões simultâneas"
+        },
+        "monitoring": {
+          "metrics": [
+            "Número de conexões ativas",
+            "Taxa de eventos enviados",
+            "Latência de entrega",
+            "Taxa de reconexões"
+          ],
+          "alerts": [
+            "Conexões SSE abaixo do esperado",
+            "Alto número de erros de conexão",
+            "Eventos não sendo entregues"
+          ]
+        },
+        "infrastructure": {
+          "proxy_config": "Configure nginx/apache para suportar SSE",
+          "cdn": "CDNs podem não suportar SSE adequadamente",
+          "timeout": "Configure timeouts apropriados para conexões longas"
+        }
+      }
+    }
+   }
