@@ -19,7 +19,6 @@ export default function DashboardPage() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   
-  // Buscar estatísticas de pedidos
   const { statistics, isLoading: ordersLoading } = useOrders()
   
   console.log('Dashboard - Estado atual:', {
@@ -95,7 +94,6 @@ export default function DashboardPage() {
     return `há ${Math.floor(diffInMinutes / 1440)}d`
   }
 
-  // Fecha o menu ao clicar fora
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -111,15 +109,12 @@ export default function DashboardPage() {
   }, [userMenuOpen])
 
   useEffect(() => {
-    console.log('Dashboard - Estado atual:');
-    console.log('- isLoading:', isLoading);
-    console.log('- hasStore:', hasStore);
-    console.log('- hasChosenPlan:', hasChosenPlan);
-    console.log('- store:', store);
-    console.log('- user:', user);
-    
-    // Deixar o AuthContext lidar com os redirecionamentos principais
-    // Este useEffect apenas verifica inconsistências e força recarregamentos se necessário
+   // console.log('Dashboard - Estado atual:');
+  //  console.log('- isLoading:', isLoading);
+  //  console.log('- hasStore:', hasStore);
+  //  console.log('- hasChosenPlan:', hasChosenPlan);
+ //   console.log('- store:', store);
+ //   console.log('- user:', user);
   }, [isLoading, hasStore, hasChosenPlan, store, user]);
 
   // Verificar inconsistências entre localStorage e estado
@@ -128,19 +123,19 @@ export default function DashboardPage() {
       const hasStoreInStorage = localStorage.getItem('has_store') === 'true';
       const hasChosenPlanInStorage = localStorage.getItem('has_chosen_plan') === 'true';
       
-      console.log('Dashboard - Verificando inconsistências:');
-      console.log('- hasStoreInStorage:', hasStoreInStorage, 'hasStore:', hasStore);
-      console.log('- hasChosenPlanInStorage:', hasChosenPlanInStorage, 'hasChosenPlan:', hasChosenPlan);
+      //console.log('Dashboard - Verificando inconsistências:');
+     // console.log('- hasStoreInStorage:', hasStoreInStorage, 'hasStore:', hasStore);
+     // console.log('- hasChosenPlanInStorage:', hasChosenPlanInStorage, 'hasChosenPlan:', hasChosenPlan);
       
       // Se o localStorage indica que tem loja mas o estado não, recarregar
       if (hasStoreInStorage && !hasStore) {
-        console.log('Dashboard - Inconsistência detectada, recarregando status da loja...');
+        //console.log('Dashboard - Inconsistência detectada, recarregando status da loja...');
         refreshStoreStatus();
       }
       
       // Se o localStorage indica que tem plano mas o estado não, recarregar
       if (hasChosenPlanInStorage && !hasChosenPlan) {
-        console.log('Dashboard - Inconsistência detectada, recarregando status da assinatura...');
+        //console.log('Dashboard - Inconsistência detectada, recarregando status da assinatura...');
         checkSubscriptionStatus();
       }
     }

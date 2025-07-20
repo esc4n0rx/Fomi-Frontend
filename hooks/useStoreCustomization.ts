@@ -204,7 +204,7 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
     } finally {
       setLoadingSettings(false);
     }
-  }, [authStore?.id, store]);
+  }, [authStore?.id]);
 
   // Load templates - Removido temporariamente para evitar erro 404
   const loadTemplates = useCallback(async () => {
@@ -428,10 +428,8 @@ export const useStoreCustomization = (): UseStoreCustomizationReturn => {
   // Load data on mount
   useEffect(() => {
     if (authStore?.id) {
-      console.log('Iniciando carregamento de dados da loja:', authStore.id);
       loadStore();
       loadSettings();
-      // Removido loadTemplates() para evitar erro 404
     }
   }, [authStore?.id, loadStore, loadSettings]);
 

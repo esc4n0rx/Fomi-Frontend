@@ -200,7 +200,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
     } catch (error) {
       console.error('Erro ao verificar status da loja:', error);
-      // Se der erro ao buscar lojas, assumir que não tem loja
       setHasStore(false);
       setStore(null);
       localStorage.removeItem('has_store');
@@ -226,7 +225,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       authStorage.setUser(userData);
       setUser(userData);
 
-      // Verificar status da loja e assinatura
       await checkStoreStatus();
       await checkSubscriptionStatus();
       
@@ -270,31 +268,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
       
       if (isExcludedPath) {
-        console.log('AuthContext - Caminho excluído, não redirecionando');
+        //console.log('AuthContext - Caminho excluído, não redirecionando');
         return;
       }
       
       if (!hasStore) {
-        console.log('AuthContext - Redirecionando para create-store: não tem loja');
+        //console.log('AuthContext - Redirecionando para create-store: não tem loja');
         window.location.href = '/dashboard/create-store';
         return;
       }
     
       if (hasStore && !hasChosenPlan) {
-        console.log('AuthContext - Redirecionando para plans: tem loja mas não tem plano ativo');
+        //console.log('AuthContext - Redirecionando para plans: tem loja mas não tem plano ativo');
         window.location.href = '/plans';
         return;
       }
       
       // Se tem loja e plano ativo, redirecionar para dashboard (exceto se já estiver lá)
       if (hasStore && hasChosenPlan && currentPath !== '/dashboard') {
-        console.log('AuthContext - Redirecionando para dashboard: tem loja e plano ativo');
+        //console.log('AuthContext - Redirecionando para dashboard: tem loja e plano ativo');
         window.location.href = '/dashboard';
         return;
       }
       
       if (currentPath === '/' && hasStore && hasChosenPlan) {
-        console.log('AuthContext - Redirecionando para dashboard: tem loja e plano ativo');
+        //console.log('AuthContext - Redirecionando para dashboard: tem loja e plano ativo');
         window.location.href = '/dashboard';
       }
     }

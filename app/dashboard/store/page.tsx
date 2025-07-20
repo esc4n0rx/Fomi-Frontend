@@ -166,6 +166,14 @@ export default function StorePage() {
     userPlan: settings?.user_plan
   });
 
+  // Função para copiar link da loja
+  const handleCopyLink = () => {
+    if (!store?.slug) return;
+    const publicUrl = `${window.location.origin}/loja/${store.slug}`;
+    navigator.clipboard.writeText(publicUrl);
+    toast({ title: 'Link copiado!', description: 'O link público da sua loja foi copiado para a área de transferência.' });
+  };
+
   if (loading || loadingSettings) {
     return (
       <div className="flex h-screen bg-gray-50">
@@ -241,6 +249,9 @@ export default function StorePage() {
                 </Button>
               </div>
             </div>
+            <Button variant="outline" onClick={handleCopyLink} disabled={!store?.slug}>
+              Copiar link da loja
+            </Button>
           </div>
         </motion.header>
 

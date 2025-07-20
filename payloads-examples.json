@@ -1,0 +1,195 @@
+{
+    "examples": {
+      "createOrder": {
+        "simple": {
+          "customer": {
+            "nome": "João Silva",
+            "telefone": "(11) 99999-9999",
+            "email": "joao@email.com"
+          },
+          "items": [
+            {
+              "product_id": "123e4567-e89b-12d3-a456-426614174000",
+              "quantidade": 2,
+              "observacoes": "Sem cebola"
+            },
+            {
+              "product_id": "456e7890-e89b-12d3-a456-426614174111",
+              "quantidade": 1
+            }
+          ],
+          "metodo_pagamento": "pix",
+          "tipo_entrega": "entrega",
+          "observacoes": "Entregar no portão azul"
+        },
+        "complete": {
+          "customer": {
+            "nome": "Maria Santos",
+            "telefone": "(11) 98888-8888",
+            "email": "maria@email.com",
+            "endereco_cep": "01234-567",
+            "endereco_rua": "Rua das Flores",
+            "endereco_numero": "123",
+            "endereco_complemento": "Apto 45",
+            "endereco_bairro": "Centro",
+            "endereco_cidade": "São Paulo",
+            "endereco_estado": "SP",
+            "endereco_referencia": "Próximo ao mercado"
+          },
+          "items": [
+            {
+              "product_id": "123e4567-e89b-12d3-a456-426614174000",
+              "quantidade": 1,
+              "observacoes": "Ponto da carne mal passado"
+            }
+          ],
+          "metodo_pagamento": "dinheiro",
+          "troco_para": 50.00,
+          "tipo_entrega": "entrega",
+          "cupom_codigo": "DESCONTO10",
+          "observacoes": "Ligar quando chegar"
+        }
+      },
+      "responses": {
+        "store": {
+          "success": true,
+          "data": {
+            "store": {
+              "id": "123e4567-e89b-12d3-a456-426614174000",
+              "nome": "Hamburgueria do João",
+              "slug": "hamburgueria-do-joao",
+              "descricao": "Os melhores hambúrgueres da cidade",
+              "logo_url": "https://res.cloudinary.com/fomi/image/upload/v1/stores/logo.jpg",
+              "banner_url": "https://res.cloudinary.com/fomi/image/upload/v1/stores/banner.jpg",
+              "cor_primaria": "#FF6B35",
+              "cor_secundaria": "#F7931E",
+              "cor_texto": "#333333",
+              "cor_fundo": "#FFFFFF",
+              "fonte_titulo": "Roboto",
+              "fonte_texto": "Roboto",
+              "whatsapp": "(11) 99999-9999",
+              "instagram": "@hamburgueriadojoao",
+              "facebook": "hamburgueriadojoao",
+              "endereco_cep": "01234-567",
+              "endereco_rua": "Rua Principal",
+              "endereco_numero": "100",
+              "endereco_bairro": "Centro",
+              "endereco_cidade": "São Paulo",
+              "endereco_estado": "SP",
+              "horario_funcionamento": {
+                "segunda": {"aberto": true, "abertura": "18:00", "fechamento": "23:00"},
+                "terca": {"aberto": true, "abertura": "18:00", "fechamento": "23:00"},
+                "quarta": {"aberto": true, "abertura": "18:00", "fechamento": "23:00"},
+                "quinta": {"aberto": true, "abertura": "18:00", "fechamento": "23:00"},
+                "sexta": {"aberto": true, "abertura": "18:00", "fechamento": "00:00"},
+                "sabado": {"aberto": true, "abertura": "18:00", "fechamento": "00:00"},
+                "domingo": {"aberto": false, "abertura": "18:00", "fechamento": "23:00"}
+              },
+              "configuracoes": {
+                "aceita_pedidos": true,
+                "tempo_preparo_min": 30,
+                "valor_minimo_pedido": 20.00,
+                "taxa_entrega": 5.00,
+                "raio_entrega_km": 5
+              }
+            }
+          }
+        },
+        "products": {
+          "success": true,
+          "data": {
+            "products": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "nome": "X-Bacon",
+                "descricao": "Hambúrguer com bacon, queijo, alface e tomate",
+                "preco": 25.90,
+                "preco_promocional": null,
+                "ingredientes": ["pão", "hambúrguer", "bacon", "queijo", "alface", "tomate"],
+                "alergicos": ["glúten", "lactose"],
+                "tempo_preparo_min": 15,
+                "disponivel": true,
+                "destaque": true,
+                "imagem_url": "https://res.cloudinary.com/fomi/image/upload/v1/products/xbacon.jpg",
+                "imagens_extras": [],
+                "ordem": 1,
+                "category": {
+                  "id": "456e7890-e89b-12d3-a456-426614174111",
+                  "nome": "Hambúrgueres",
+                  "cor": "#FF6B35"
+                }
+              }
+            ]
+          }
+        },
+        "orderCreated": {
+          "success": true,
+          "message": "Pedido criado com sucesso",
+          "data": {
+            "order": {
+              "id": "789e0123-e89b-12d3-a456-426614174222",
+              "numero_pedido": "202412150001",
+              "status": "pendente",
+              "total": 30.90,
+              "tempo_estimado_min": 30
+            },
+            "numero_pedido": "202412150001",
+            "total": 30.90,
+            "tempo_estimado": 30
+          }
+        }
+      }
+    },
+    "workflows": {
+      "loadStore": {
+        "description": "Fluxo para carregar uma loja pública",
+        "steps": [
+          {
+            "step": 1,
+            "action": "GET /public/store/{slug}",
+            "description": "Buscar dados básicos da loja"
+          },
+          {
+            "step": 2,
+            "action": "GET /public/store/{storeId}/status",
+            "description": "Verificar se está aceitando pedidos"
+          },
+          {
+            "step": 3,
+            "action": "GET /public/store/{storeId}/categories",
+            "description": "Carregar categorias (opcional, para menu)"
+          },
+          {
+            "step": 4,
+            "action": "GET /public/store/{storeId}/products",
+            "description": "Carregar produtos disponíveis"
+          },
+          {
+            "step": 5,
+            "action": "GET /public/store/{storeId}/promotions",
+            "description": "Carregar promoções ativas (opcional)"
+          }
+        ]
+      },
+      "createOrder": {
+        "description": "Fluxo para criar um pedido",
+        "steps": [
+          {
+            "step": 1,
+            "action": "Validar carrinho localmente",
+            "description": "Verificar produtos, quantidades e disponibilidade"
+          },
+          {
+            "step": 2,
+            "action": "POST /public/orders/{storeId}",
+            "description": "Enviar pedido para processamento"
+          },
+          {
+            "step": 3,
+            "action": "GET /public/orders/tracking/{numeroPedido}",
+            "description": "Acompanhar status do pedido (polling ou websocket)"
+          }
+        ]
+      }
+    }
+  }

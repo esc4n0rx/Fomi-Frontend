@@ -1,0 +1,21 @@
+{
+  "name": "Loja Fomi Eats",
+  "short_name": "Fomi Loja",
+  "start_url": "/loja/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FF6B35",
+  "description": "Página pública da loja Fomi Eats",
+  "icons": [
+    {
+      "src": "/logo/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+} 

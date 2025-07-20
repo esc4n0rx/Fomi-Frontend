@@ -64,7 +64,7 @@ export function useProducts() {
         setImageSettings(response.data)
       }
     } catch (error: any) {
-      console.error('Erro ao buscar configurações de imagem:', error)
+      console.error('Erro ao buscar configurações de imagem (erro completo):', error)
       // Se a API retornar erro, usar configurações padrão baseadas no plano do usuário
       setImageSettings(null)
     } finally {
