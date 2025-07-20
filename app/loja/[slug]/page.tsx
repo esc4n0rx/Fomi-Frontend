@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { notFound } from 'next/navigation';
 import Head from 'next/head';
 import { useSSE } from '@/hooks/useSSE';
 import { toast as customToast } from '@/hooks/use-toast';
+import PublicStoreClient from './PublicStoreClient'
 
 const API_BASE = 'https://api.fomi-eats.shop/api/v1';
 
@@ -36,112 +37,14 @@ async function getPromotions(storeId: string) {
   return data?.data?.promotions || [];
 }
 
+// Componente Server
 export default async function PublicStorePage({ params }: { params: { slug: string } }) {
   const store = await getStoreData(params.slug);
   if (!store) return notFound();
-
-  // Personalização básica
-  const styleVars = {
-    '--cor-primaria': store.cor_primaria,
-    '--cor-secundaria': store.cor_secundaria,
-    '--cor-texto': store.cor_texto,
-    '--cor-fundo': store.cor_fundo,
-    '--fonte-titulo': store.fonte_titulo,
-    '--fonte-texto': store.fonte_texto,
-  } as React.CSSProperties;
-
-  // Link público da loja
+  const categories = await getCategories(store.id);
+  const products = await getProducts(store.id);
+  const promotions = await getPromotions(store.id);
   const publicUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://fomi-eats.shop'}/loja/${store.slug}`;
-
-  // Componente de botão copiar (Client Component)
-  function CopyButton() {
-    const [copied, setCopied] = useState(false);
-    return (
-      <button
-        className="px-3 py-1 rounded bg-[var(--cor-primaria)] text-white text-sm hover:bg-[var(--cor-secundaria)] transition-colors"
-        onClick={async () => {
-          await navigator.clipboard.writeText(publicUrl);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }}
-      >
-        {copied ? 'Link copiado!' : 'Copiar link da loja'}
-      </button>
-    );
-  }
-
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [promotions, setPromotions] = useState([]);
-  // Estado para controlar produtos visualizados/novos
-  const [recentProductIds, setRecentProductIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (!store?.id) return;
-    getCategories(store.id).then(setCategories);
-    getPromotions(store.id).then(setPromotions);
-    getProducts(store.id).then(setProducts);
-  }, [store?.id]);
-
-  useEffect(() => {
-    if (!store?.id) return;
-    getProducts(store.id, selectedCategory || undefined).then(setProducts);
-  }, [selectedCategory]);
-
-  // Registrar service worker PWA
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js');
-    }
-  }, []);
-
-  // SSE integração (Client Only)
-  if (typeof window !== 'undefined' && store?.id) {
-    const tokenRaw = localStorage.getItem('auth_token');
-    const token = tokenRaw === null ? undefined : tokenRaw;
-    const { events } = useSSE(store.id, token);
-    useEffect(() => {
-      if (!events.length) return;
-      const lastEvent = events[events.length - 1];
-      if (lastEvent.type === 'webhook_event') {
-        if (lastEvent.event === 'store.viewed') {
-          customToast({
-            title: 'Nova visita na loja!',
-            description: `Alguém acessou sua loja agora mesmo.`,
-          });
-        }
-        if (lastEvent.event === 'store.product_viewed') {
-          customToast({
-            title: 'Produto visualizado',
-            description: `Produto: ${lastEvent.data.product?.nome}`,
-          });
-          if (lastEvent.data.product?.id) {
-            setRecentProductIds((ids) => [...new Set([...ids, lastEvent.data.product.id])]);
-            setTimeout(() => {
-              setRecentProductIds((ids) => ids.filter(id => id !== lastEvent.data.product.id));
-            }, 15000);
-          }
-          // Atualizar produtos (caso necessário)
-          getProducts(store.id, selectedCategory || undefined).then(setProducts);
-        }
-        if (lastEvent.event === 'order.created') {
-          customToast({
-            title: 'Novo pedido realizado!',
-            description: `Pedido #${lastEvent.data.order.numero_pedido} de ${lastEvent.data.order.cliente_nome}`,
-          });
-          // Atualizar produtos (estoque pode mudar)
-          getProducts(store.id, selectedCategory || undefined).then(setProducts);
-        }
-      }
-      if (lastEvent.type === 'notification') {
-        customToast({
-          title: 'Notificação',
-          description: lastEvent.message,
-        });
-      }
-    }, [events]);
-  }
 
   return (
     <>
@@ -154,92 +57,13 @@ export default async function PublicStorePage({ params }: { params: { slug: stri
         <title>{store.nome} | Loja Fomi Eats</title>
         <meta name="description" content={store.descricao || 'Loja Fomi Eats'} />
       </Head>
-      <main
-        className="min-h-screen flex flex-col items-center w-full"
-        style={styleVars}
-      >
-        <div className="w-full max-w-2xl p-4" style={{ background: 'var(--cor-fundo)' }}>
-          {store.banner_url && (
-            <img src={store.banner_url} alt="Banner da loja" className="w-full rounded-lg mb-4" />
-          )}
-          <div className="flex items-center gap-4 mb-4">
-            <img
-              src={store.logo_url || '/placeholder-logo.png'}
-              alt="Logo da loja"
-              className="w-16 h-16 rounded-full border"
-            />
-            <div className="flex-1">
-              <h1
-                className="text-2xl font-bold"
-                style={{ color: 'var(--cor-primaria)', fontFamily: 'var(--fonte-titulo)' }}
-              >
-                {store.nome}
-              </h1>
-              <p className="text-sm" style={{ color: 'var(--cor-texto)', fontFamily: 'var(--fonte-texto)' }}>
-                {store.descricao}
-              </p>
-            </div>
-            <CopyButton />
-          </div>
-
-          {/* PROMOÇÕES */}
-          {promotions.length > 0 && (
-            <div className="mb-4">
-              <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--cor-primaria)' }}>Promoções</h2>
-              <div className="flex flex-col gap-2">
-                {promotions.map((promo: any) => (
-                  <div key={promo.id} className="rounded bg-orange-100 p-2 text-sm">
-                    <span className="font-semibold">{promo.nome}</span> - {promo.descricao}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* CATEGORIAS */}
-          {categories.length > 0 && (
-            <div className="mb-4 flex gap-2 overflow-x-auto">
-              <button
-                className={`px-3 py-1 rounded ${!selectedCategory ? 'bg-[var(--cor-primaria)] text-white' : 'bg-gray-200'}`}
-                onClick={() => setSelectedCategory(null)}
-              >
-                Todos
-              </button>
-              {categories.map((cat: any) => (
-                <button
-                  key={cat.id}
-                  className={`px-3 py-1 rounded ${selectedCategory === cat.id ? 'bg-[var(--cor-primaria)] text-white' : 'bg-gray-200'}`}
-                  onClick={() => setSelectedCategory(cat.id)}
-                >
-                  {cat.nome}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* PRODUTOS */}
-          <div className="grid gap-4">
-            {products.length === 0 && <div className="text-center text-gray-500">Nenhum produto encontrado.</div>}
-            {products.map((prod: any) => (
-              <div key={prod.id} className="rounded border p-4 flex gap-4 items-center bg-white">
-                <img src={prod.imagem_url || '/placeholder.jpg'} alt={prod.nome} className="w-20 h-20 object-cover rounded" />
-                <div className="flex-1">
-                  <div className="font-bold text-lg" style={{ color: 'var(--cor-primaria)' }}>{prod.nome}
-                    {recentProductIds.includes(prod.id) && (
-                      <span className="ml-2 px-2 py-0.5 rounded-full bg-blue-500 text-white text-xs animate-pulse">Novo</span>
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-600">{prod.descricao}</div>
-                  <div className="mt-1 font-bold text-base">R$ {prod.preco.toFixed(2)}</div>
-                  {prod.preco_promocional && (
-                    <div className="text-sm text-green-600 font-semibold">Promo: R$ {prod.preco_promocional.toFixed(2)}</div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </main>
+      <PublicStoreClient
+        store={store}
+        initialCategories={categories}
+        initialProducts={products}
+        initialPromotions={promotions}
+        publicUrl={publicUrl}
+      />
     </>
   );
 } 
