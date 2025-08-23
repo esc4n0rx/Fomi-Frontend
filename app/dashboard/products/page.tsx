@@ -612,12 +612,12 @@ export default function ProductsPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">Categoria</Label>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <Select value={selectedCategory} onValueChange={(value) => setSelectedCategory(value === "all" ? "" : value)}>
                       <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Todas as categorias" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todas as categorias</SelectItem>
+                        <SelectItem value="all">Todas as categorias</SelectItem>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.nome}
@@ -630,14 +630,14 @@ export default function ProductsPage() {
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">Disponibilidade</Label>
                     <Select 
-                      value={showOnlyAvailable === undefined ? "" : showOnlyAvailable.toString()}
-                      onValueChange={(value) => setShowOnlyAvailable(value === "" ? undefined : value === "true")}
+                      value={showOnlyAvailable === undefined ? "all" : showOnlyAvailable.toString()}
+                      onValueChange={(value) => setShowOnlyAvailable(value === "all" ? undefined : value === "true")}
                     >
                       <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Todos os status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos os status</SelectItem>
+                        <SelectItem value="all">Todos os status</SelectItem>
                         <SelectItem value="true">Apenas disponíveis</SelectItem>
                         <SelectItem value="false">Apenas indisponíveis</SelectItem>
                       </SelectContent>
@@ -647,14 +647,14 @@ export default function ProductsPage() {
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">Destaque</Label>
                     <Select 
-                      value={showOnlyFeatured === undefined ? "" : showOnlyFeatured.toString()}
-                      onValueChange={(value) => setShowOnlyFeatured(value === "" ? undefined : value === "true")}
+                      value={showOnlyFeatured === undefined ? "all" : showOnlyFeatured.toString()}
+                      onValueChange={(value) => setShowOnlyFeatured(value === "all" ? undefined : value === "true")}
                     >
                       <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Todos os produtos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos os produtos</SelectItem>
+                        <SelectItem value="all">Todos os produtos</SelectItem>
                         <SelectItem value="true">Apenas destaque</SelectItem>
                       </SelectContent>
                     </Select>

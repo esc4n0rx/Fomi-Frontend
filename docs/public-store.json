@@ -1,0 +1,470 @@
+
+{
+  "title": "Fomi - API Pública de Lojas",
+  "description": "Endpoints públicos para navegação e pedidos em lojas",
+  "baseUrl": "/api/v1/public",
+  "version": "1.0.0",
+  "authentication": "none",
+  "rateLimit": "public",
+  
+  "endpoints": {
+    
+    "getPublicStore": {
+      "method": "GET",
+      "path": "/store/:slug",
+      "description": "Busca dados públicos da loja por slug",
+      "parameters": {
+        "slug": {
+          "type": "string",
+          "location": "path",
+          "required": true,
+          "description": "Slug único da loja (ex: 'minha-loja-lanches')"
+        }
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "store": {
+            "id": "uuid",
+            "nome": "string",
+            "descricao": "string|null",
+            "slug": "string",
+            "whatsapp": "string|null",
+            "instagram": "string|null", 
+            "facebook": "string|null",
+            "endereco_cep": "string|null",
+            "endereco_rua": "string|null",
+            "endereco_numero": "string|null",
+            "endereco_complemento": "string|null",
+            "endereco_bairro": "string|null",
+            "endereco_cidade": "string|null",
+            "endereco_estado": "string|null",
+            "logo_url": "string|null",
+            "banner_url": "string|null",
+            "cor_texto": "string",
+            "cor_fundo": "string",
+            "fonte_titulo": "string",
+            "fonte_texto": "string",
+            "configuracoes": {
+              "aceita_pedidos": "boolean",
+              "valor_minimo_pedido": "number|null",
+              "taxa_entrega": "number|null",
+              "tempo_preparo_min": "number",
+              "raio_entrega_km": "number|null"
+            }
+          }
+        }
+      },
+      "errors": [
+        { "status": 404, "message": "Loja não encontrada" }
+      ]
+    },
+
+    "getPublicProducts": {
+      "method": "GET", 
+      "path": "/store/:storeId/products",
+      "description": "Lista produtos públicos disponíveis da loja",
+      "parameters": {
+        "storeId": {
+          "type": "uuid",
+          "location": "path", 
+          "required": true,
+          "description": "ID da loja"
+        },
+        "category_id": {
+          "type": "uuid",
+          "location": "query",
+          "required": false,
+          "description": "Filtrar por categoria"
+        },
+        "destaque": {
+          "type": "boolean",
+          "location": "query",
+          "required": false,
+          "description": "Filtrar produtos em destaque"
+        }
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "products": [
+            {
+              "id": "uuid",
+              "nome": "string",
+              "descricao": "string|null",
+              "preco": "number",
+              "preco_promocional": "number|null",
+              "imagem_url": "string|null",
+              "imagens_extras": ["string"],
+              "category_id": "uuid|null",
+              "ingredientes": ["string"],
+              "alergicos": ["string"],
+              "tempo_preparo_min": "number|null",
+              "disponivel": "boolean",
+              "destaque": "boolean",
+              "ordem": "number",
+              "store_id": "uuid"
+            }
+          ]
+        }
+      },
+      "errors": [
+        { "status": 404, "message": "Loja não encontrada" }
+      ]
+    },
+
+    "getPublicProduct": {
+      "method": "GET",
+      "path": "/store/:storeId/products/:productId", 
+      "description": "Busca produto específico da loja",
+      "parameters": {
+        "storeId": {
+          "type": "uuid",
+          "location": "path",
+          "required": true,
+          "description": "ID da loja"
+        },
+        "productId": {
+          "type": "uuid", 
+          "location": "path",
+          "required": true,
+          "description": "ID do produto"
+        }
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "product": {
+            "id": "uuid",
+            "nome": "string",
+            "descricao": "string|null", 
+            "preco": "number",
+            "preco_promocional": "number|null",
+            "imagem_url": "string|null",
+            "imagens_extras": ["string"],
+            "category_id": "uuid|null",
+            "ingredientes": ["string"],
+            "alergicos": ["string"], 
+            "tempo_preparo_min": "number|null",
+            "disponivel": "boolean",
+            "destaque": "boolean",
+            "ordem": "number",
+            "store_id": "uuid"
+          }
+        }
+      },
+      "errors": [
+        { "status": 404, "message": "Produto não encontrado" },
+        { "status": 404, "message": "Loja não encontrada" }
+      ]
+    },
+
+    "getPublicCategories": {
+      "method": "GET",
+      "path": "/store/:storeId/categories",
+      "description": "Lista categorias públicas da loja",
+      "parameters": {
+        "storeId": {
+          "type": "uuid",
+          "location": "path",
+          "required": true,
+          "description": "ID da loja"
+        }
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "categories": [
+            {
+              "id": "uuid",
+              "nome": "string",
+              "descricao": "string|null",
+              "imagem_url": "string|null",
+              "ordem": "number",
+              "store_id": "uuid"
+            }
+          ]
+        }
+      },
+      "errors": [
+        { "status": 404, "message": "Loja não encontrada" }
+      ]
+    },
+
+    "getActivePromotions": {
+      "method": "GET",
+      "path": "/store/:storeId/promotions",
+      "description": "Lista promoções ativas da loja",
+      "parameters": {
+        "storeId": {
+          "type": "uuid",
+          "location": "path",
+          "required": true,
+          "description": "ID da loja"
+        }
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "promotions": [
+            {
+              "id": "uuid",
+              "titulo": "string",
+              "descricao": "string|null",
+              "tipo": "percentual|valor_fixo|produto_gratis",
+              "valor": "number",
+              "data_inicio": "string (ISO date)",
+              "data_fim": "string (ISO date)",
+              "produto_gratis_id": "uuid|null",
+              "valor_minimo": "number|null",
+              "limite_uso": "number|null",
+              "uso_atual": "number",
+              "ativo": "boolean",
+              "store_id": "uuid"
+            }
+          ]
+        }
+      },
+      "errors": [
+        { "status": 404, "message": "Loja não encontrada" }
+      ]
+    },
+
+    "getStoreStatus": {
+      "method": "GET",
+      "path": "/store/:storeId/status",
+      "description": "Verifica status operacional da loja",
+      "parameters": {
+        "storeId": {
+          "type": "uuid",
+          "location": "path",
+          "required": true,
+          "description": "ID da loja"
+        }
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "status": {
+            "aberta": "boolean",
+            "aceita_pedidos": "boolean",
+            "tempo_preparo_estimado": "number",
+            "mensagem": "string|null"
+          }
+        }
+      },
+      "errors": [
+        { "status": 404, "message": "Loja não encontrada" }
+      ]
+    },
+
+    "createOrder": {
+      "method": "POST",
+      "path": "/orders/:storeId",
+      "description": "Cria novo pedido na loja",
+      "parameters": {
+        "storeId": {
+          "type": "uuid", 
+          "location": "path",
+          "required": true,
+          "description": "ID da loja"
+        }
+      },
+      "requestBody": {
+        "customer": {
+          "nome": "string (2-255 chars)",
+          "telefone": "string (formato: (XX) 9XXXX-XXXX)",
+          "email": "string (email válido, opcional)",
+          "endereco_cep": "string (formato: XXXXX-XXX, opcional)",
+          "endereco_rua": "string (max 500 chars, opcional)",
+          "endereco_numero": "string (max 20 chars, opcional)", 
+          "endereco_complemento": "string (max 255 chars, opcional)",
+          "endereco_bairro": "string (max 255 chars, opcional)",
+          "endereco_cidade": "string (max 255 chars, opcional)",
+          "endereco_estado": "string (2 chars, opcional)",
+          "endereco_referencia": "string (max 1000 chars, opcional)"
+        },
+        "items": [
+          {
+            "product_id": "uuid",
+            "quantidade": "number (min 1)",
+            "observacoes": "string (max 500 chars, opcional)"
+          }
+        ],
+        "metodo_pagamento": "dinheiro|cartao|pix",
+        "troco_para": "number (opcional, se pagamento = dinheiro)",
+        "tipo_entrega": "entrega|retirada",
+        "cupom_codigo": "string (max 50 chars, opcional)",
+        "observacoes": "string (max 1000 chars, opcional)"
+      },
+      "response": {
+        "success": true,
+        "message": "Pedido criado com sucesso",
+        "data": {
+          "order": {
+            "id": "uuid",
+            "numero_pedido": "string",
+            "store_id": "uuid", 
+            "customer_id": "uuid",
+            "status": "pendente",
+            "subtotal": "number",
+            "desconto_promocao": "number",
+            "desconto_cupom": "number",
+            "taxa_entrega": "number",
+            "total": "number",
+            "metodo_pagamento": "string",
+            "troco_para": "number|null",
+            "tipo_entrega": "string",
+            "cupom_codigo": "string|null",
+            "observacoes": "string|null",
+            "tempo_estimado_min": "number",
+            "created_at": "string (ISO date)"
+          },
+          "numero_pedido": "string",
+          "total": "number", 
+          "tempo_estimado": "number"
+        }
+      },
+      "errors": [
+        { "status": 400, "message": "Loja não está aceitando pedidos no momento" },
+        { "status": 400, "message": "Valor mínimo do pedido é R$ X,XX" },
+        { "status": 400, "message": "Produto não encontrado: {productId}" },
+        { "status": 400, "message": "Produto indisponível: {productName}" },
+        { "status": 400, "message": "Erro no cupom: {couponError}" },
+        { "status": 404, "message": "Loja não encontrada" }
+      ]
+    },
+
+    "getOrderByNumber": {
+      "method": "GET",
+      "path": "/orders/tracking/:numeroPedido",
+      "description": "Busca pedido por número para acompanhamento",
+      "parameters": {
+        "numeroPedido": {
+          "type": "string",
+          "location": "path", 
+          "required": true,
+          "description": "Número único do pedido"
+        }
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "order": {
+            "id": "uuid",
+            "numero_pedido": "string",
+            "store_id": "uuid",
+            "status": "pendente|confirmado|preparando|pronto|saiu_entrega|entregue|cancelado",
+            "subtotal": "number",
+            "desconto_promocao": "number", 
+            "desconto_cupom": "number",
+            "taxa_entrega": "number",
+            "total": "number",
+            "metodo_pagamento": "string",
+            "tipo_entrega": "string",
+            "tempo_estimado_min": "number",
+            "observacoes": "string|null",
+            "motivo_cancelamento": "string|null",
+            "created_at": "string (ISO date)",
+            "updated_at": "string (ISO date)",
+            "customer": {
+              "nome": "string",
+              "telefone": "string",
+              "endereco_rua": "string|null",
+              "endereco_numero": "string|null",
+              "endereco_bairro": "string|null",
+              "endereco_cidade": "string|null"
+            },
+            "items": [
+              {
+                "id": "uuid",
+                "produto_nome": "string",
+                "produto_descricao": "string|null",
+                "quantidade": "number",
+                "preco_unitario": "number",
+                "subtotal": "number",
+                "observacoes": "string|null"
+              }
+            ],
+            "store": {
+              "nome": "string",
+              "whatsapp": "string|null",
+              "endereco_rua": "string|null",
+              "endereco_numero": "string|null",
+              "endereco_bairro": "string|null",
+              "endereco_cidade": "string|null"
+            }
+          }
+        }
+      },
+      "errors": [
+        { "status": 404, "message": "Pedido não encontrado" }
+      ]
+    }
+  },
+
+  "commonDataTypes": {
+    "uuid": "string no formato UUID v4",
+    "phoneFormat": "(XX) 9XXXX-XXXX ou XX9XXXXXXXX",
+    "cepFormat": "XXXXX-XXX ou XXXXXXXX",
+    "orderStatus": ["pendente", "confirmado", "preparando", "pronto", "saiu_entrega", "entregue", "cancelado"],
+    "paymentMethods": ["dinheiro", "cartao", "pix"], 
+    "deliveryTypes": ["entrega", "retirada"],
+    "promotionTypes": ["percentual", "valor_fixo", "produto_gratis"]
+  },
+
+  "businessRules": {
+    "orderCreation": {
+      "minimumItems": 1,
+      "maximumItemObservations": "500 caracteres",
+      "maximumOrderObservations": "1000 caracteres", 
+      "customerNameRequired": true,
+      "customerPhoneRequired": true,
+      "addressRequiredForDelivery": true,
+      "changeOnlyForCashPayment": true
+    },
+    "storeValidation": {
+      "mustBeActive": true,
+      "mustAcceptOrders": true,
+      "minimumOrderValue": "configurável por loja",
+      "deliveryRadius": "configurável por loja"
+    },
+    "productValidation": {
+      "mustBeAvailable": true,
+      "mustBelongToStore": true,
+      "quantityMinimum": 1
+    }
+  },
+
+  "examples": {
+    "createOrderRequest": {
+      "customer": {
+        "nome": "João Silva",
+        "telefone": "(11) 99999-9999",
+        "email": "joao@email.com",
+        "endereco_cep": "01234-567",
+        "endereco_rua": "Rua das Flores",
+        "endereco_numero": "123",
+        "endereco_bairro": "Centro",
+        "endereco_cidade": "São Paulo",
+        "endereco_estado": "SP"
+      },
+      "items": [
+        {
+          "product_id": "550e8400-e29b-41d4-a716-446655440000",
+          "quantidade": 2,
+          "observacoes": "Sem cebola"
+        },
+        {
+          "product_id": "550e8400-e29b-41d4-a716-446655440001", 
+          "quantidade": 1
+        }
+      ],
+      "metodo_pagamento": "dinheiro",
+      "troco_para": 50.00,
+      "tipo_entrega": "entrega",
+      "cupom_codigo": "DESCONTO10",
+      "observacoes": "Favor tocar a campainha"
+    }
+  }
+}

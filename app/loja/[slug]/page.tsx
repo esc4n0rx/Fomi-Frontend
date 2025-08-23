@@ -1,9 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import Head from 'next/head';
-import { useSSE } from '@/hooks/useSSE';
-import { toast as customToast } from '@/hooks/use-toast';
-import PublicStoreClient from './PublicStoreClient'
+import PublicStoreClient from './PublicStoreClient';
 
 const API_BASE = 'https://api.fomi-eats.shop/api/v1';
 
@@ -30,21 +28,13 @@ async function getProducts(storeId: string, categoryId?: string) {
   return data?.data?.products || [];
 }
 
-async function getPromotions(storeId: string) {
-  const res = await fetch(`${API_BASE}/public/store/${storeId}/promotions`, { cache: 'no-store' });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data?.data?.promotions || [];
-}
-
 // Componente Server
 export default async function PublicStorePage({ params }: { params: { slug: string } }) {
-  const store = await getStoreData(params.slug);
+  const slug = params.slug;
+  const store = await getStoreData(slug);
   if (!store) return notFound();
   const categories = await getCategories(store.id);
   const products = await getProducts(store.id);
-  const promotions = await getPromotions(store.id);
-  const publicUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://fomi-eats.shop'}/loja/${store.slug}`;
 
   return (
     <>
@@ -61,8 +51,6 @@ export default async function PublicStorePage({ params }: { params: { slug: stri
         store={store}
         initialCategories={categories}
         initialProducts={products}
-        initialPromotions={promotions}
-        publicUrl={publicUrl}
       />
     </>
   );
