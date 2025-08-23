@@ -9,6 +9,7 @@ import ProductModal from '@/components/store/ProductModal';
 import ShoppingCart from '@/components/store/ShoppingCart';
 import CheckoutModal from '@/components/store/CheckoutModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
 // Tipos
 interface Store {
@@ -49,17 +50,31 @@ interface Product {
 interface PublicStoreClientProps {
   store: Store;
   initialCategories: Category[];
-  initialProducts: Product[];
 }
 
-function StoreLayout({ store, initialCategories, initialProducts }: PublicStoreClientProps) {
+function StoreLayout({ store, initialCategories }: PublicStoreClientProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const { dispatch } = useCart();
 
-  const filteredProducts = initialProducts.filter(p => 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      const res = await fetch(`https://api.fomi-eats.shop/api/v1/public/store/${store.id}/products`);
+      if (res.ok) {
+        const data = await res.json();
+        setProducts(data?.data?.products || []);
+      }
+      setIsLoading(false);
+    };
+    fetchProducts();
+  }, [store.id]);
+
+  const filteredProducts = products.filter(p => 
     p.disponivel && (!selectedCategory || p.category_id === selectedCategory)
   );
 
@@ -91,29 +106,35 @@ function StoreLayout({ store, initialCategories, initialProducts }: PublicStoreC
         storeColors={storeColors}
       />
       <main className="container mx-auto p-4">
-        <AnimatePresence>
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {filteredProducts.map((product, i) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <ProductCard 
-                  product={product} 
-                  onAddToCart={() => handleSelectProduct(product)}
-                  storeColors={storeColors}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-16 w-16 animate-spin" style={{ color: storeColors.texto }} />
+          </div>
+        ) : (
+          <AnimatePresence>
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {filteredProducts.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <ProductCard 
+                    product={product} 
+                    onAddToCart={() => handleSelectProduct(product)}
+                    storeColors={storeColors}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        )}
       </main>
       <ProductModal 
         isOpen={isProductModalOpen}

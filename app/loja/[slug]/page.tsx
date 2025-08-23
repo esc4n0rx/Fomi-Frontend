@@ -34,7 +34,6 @@ export default async function PublicStorePage({ params }: { params: { slug: stri
   const store = await getStoreData(slug);
   if (!store) return notFound();
   const categories = await getCategories(store.id);
-  const products = await getProducts(store.id);
 
   return (
     <>
@@ -50,7 +49,6 @@ export default async function PublicStorePage({ params }: { params: { slug: stri
       <PublicStoreClient
         store={store}
         initialCategories={categories}
-        initialProducts={products}
       />
     </>
   );
