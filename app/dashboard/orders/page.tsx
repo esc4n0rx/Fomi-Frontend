@@ -25,8 +25,9 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false)
-  
-  const { orders, statistics, isLoading, error, updateOrderStatus, addOrderNote, refresh } = useOrders({
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false)
+
+  const { orders, statistics, isLoading, error, updateOrderStatus, addOrderNote, refresh, getOrder } = useOrders({
     status: selectedStatus === "todos" ? undefined : selectedStatus || undefined
   })
   
@@ -95,9 +96,17 @@ export default function OrdersPage() {
     cancelado: { label: "Cancelado", color: "bg-red-100 text-red-800" },
   }
 
-  const handleViewOrder = (order: Order) => {
-    setSelectedOrder(order)
-    setIsDetailsModalOpen(true)
+  const handleViewOrder = async (order: Order) => {
+    setIsFetchingDetails(true)
+    try {
+      const fullOrder = await getOrder(order.id)
+      setSelectedOrder(fullOrder)
+      setIsDetailsModalOpen(true)
+    } catch (error) {
+      toast.error("Erro ao carregar detalhes do pedido.")
+    } finally {
+      setIsFetchingDetails(false)
+    }
   }
 
   const handlePrintOrder = (order: Order) => {
@@ -385,6 +394,7 @@ export default function OrdersPage() {
         onUpdateStatus={handleUpdateStatus}
         onAddNote={handleAddNote}
         onPrint={handlePrintOrder}
+        isFetchingDetails={isFetchingDetails}
       />
       
       <OrderPrint

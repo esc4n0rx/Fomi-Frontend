@@ -477,22 +477,30 @@ function ProductModal({
   isOpen, 
   onClose, 
   onAddToCart, 
-  storeColors 
+  storeColors,
+  store // Adicionado para acessar a fonte
 }: {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
   onAddToCart: (product: Product, quantity: number, observations: string) => void;
   storeColors: any;
+  store: Store; // Adicionado
 }) {
   const [quantity, setQuantity] = useState(1);
   const [observations, setObservations] = useState('');
 
+  // Resetar estado quando o modal for reaberto com um novo produto
+  useEffect(() => {
+    if (isOpen) {
+      setQuantity(1);
+      setObservations('');
+    }
+  }, [isOpen]);
+
   const handleAddToCart = () => {
     if (product) {
       onAddToCart(product, quantity, observations);
-      setQuantity(1);
-      setObservations('');
     }
   };
 
@@ -507,155 +515,135 @@ function ProductModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0">
-        <div className="relative">
-          {/* Imagem do produto */}
-          {product.imagem_url && (
-            <div className="relative h-64 sm:h-80 overflow-hidden">
-              <img 
-                src={product.imagem_url} 
-                alt={product.nome}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-4 left-4 flex gap-2">
-                {product.destaque && (
-                  <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">
-                    <Star className="w-3 h-3 mr-1" />
-                    Destaque
-                  </Badge>
-                )}
-                {discount > 0 && (
-                  <Badge className="bg-red-500 text-white border-0">
-                    -{discount}%
-                  </Badge>
-                )}
-              </div>
-              <Button 
-                variant="secondary" 
-                size="icon"
-                className="absolute top-4 right-4 rounded-full bg-white/90"
-                onClick={onClose}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-          
-          <div className="p-6">
-            {/* Header */}
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold mb-2">{product.nome}</h2>
-              {product.descricao && (
-                <p className="text-gray-600">{product.descricao}</p>
+      <DialogContent className="w-[95vw] max-w-lg rounded-lg max-h-[90svh] p-0 flex flex-col">
+        {/* Imagem do produto */}
+        {product.imagem_url && (
+          <div className="relative h-64 sm:h-72 overflow-hidden shrink-0">
+            <img 
+              src={product.imagem_url} 
+              alt={product.nome}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+            <div className="absolute top-4 left-4 flex gap-2">
+              {product.destaque && (
+                <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg">
+                  <Star className="w-3 h-3 mr-1" />
+                  Destaque
+                </Badge>
+              )}
+              {discount > 0 && (
+                <Badge className="bg-red-500 text-white border-0 shadow-lg">
+                  -{discount}%
+                </Badge>
               )}
             </div>
-            
-            {/* Ingredientes e alérgenos */}
-            {(product.ingredientes?.length || product.alergicos?.length) && (
-              <div className="mb-6">
-                {product.ingredientes && product.ingredientes.length > 0 && (
-                  <div className="mb-3">
-                    <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                      <ChefHat className="w-4 h-4" />
-                      Ingredientes
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      {product.ingredientes.join(', ')}
-                    </p>
-                  </div>
-                )}
-                {product.alergicos && product.alergicos.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-sm mb-2 flex items-center gap-2 text-orange-600">
-                      <AlertCircle className="w-4 h-4" />
-                      Contém alérgenos
-                    </h4>
-                    <p className="text-sm text-orange-600">
-                      {product.alergicos.join(', ')}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* Observações */}
-            <div className="mb-6">
-              <Label htmlFor="observations" className="text-sm font-semibold mb-2 block">
-                Observações (opcional)
-              </Label>
-              <Textarea
-                id="observations"
-                placeholder="Alguma observação sobre o preparo? Ex: sem cebola, ponto da carne..."
-                value={observations}
-                onChange={(e) => setObservations(e.target.value)}
-                className="min-h-[80px] resize-none"
-                maxLength={500}
-              />
-              <p className="text-xs text-gray-500 mt-1">{observations.length}/500 caracteres</p>
-            </div>
-            
-            {/* Footer com preço e controles */}
-            <div className="flex items-center justify-between pt-4 border-t">
+            <Button 
+              variant="secondary" 
+              size="icon"
+              className="absolute top-4 right-4 rounded-full bg-white/80 backdrop-blur-sm"
+              onClick={onClose}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+        
+        <ScrollArea className="flex-1">
+          <div className="p-6 space-y-4">
+              {/* Header */}
               <div>
-                {product.preco_promocional ? (
-                  <div>
-                    <span className="text-2xl font-bold text-gray-900">
-                      R$ {product.preco_promocional.toFixed(2).replace('.', ',')}
-                    </span>
-                    <span className="text-sm line-through text-gray-400 ml-2">
-                      R$ {product.preco.toFixed(2).replace('.', ',')}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-2xl font-bold text-gray-900">
-                    R$ {product.preco.toFixed(2).replace('.', ',')}
-                  </span>
-                )}
-                {product.tempo_preparo_min && (
-                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    Tempo de preparo: {product.tempo_preparo_min} min
-                  </p>
+                {/* CORREÇÃO DE FONTE */}
+                <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: store.fonte_titulo }}>
+                  {product.nome}
+                </h2>
+                {product.descricao && (
+                  <p className="text-gray-600">{product.descricao}</p>
                 )}
               </div>
               
-              <div className="flex items-center gap-4">
-                {/* Controle de quantidade */}
-                <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
-                  <Button 
-                    size="icon" 
-                    variant="ghost"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="h-8 w-8 rounded-full"
-                    disabled={quantity <= 1}
-                  >
-                    <Minus className="w-4 h-4" />
-                  </Button>
-                  <span className="w-8 text-center font-semibold">{quantity}</span>
-                  <Button 
-                    size="icon" 
-                    variant="ghost"
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="h-8 w-8 rounded-full"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
+              {/* Ingredientes e alérgenos */}
+              {(product.ingredientes?.length || product.alergicos?.length) && (
+                <div className="space-y-3">
+                  {product.ingredientes && product.ingredientes.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                        <ChefHat className="w-4 h-4" />
+                        Ingredientes
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {product.ingredientes.join(', ')}
+                      </p>
+                    </div>
+                  )}
+                  {product.alergicos && product.alergicos.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2 flex items-center gap-2 text-orange-600">
+                        <AlertCircle className="w-4 h-4" />
+                        Contém alérgenos
+                      </h4>
+                      <p className="text-sm text-orange-600">
+                        {product.alergicos.join(', ')}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                
-                {/* Botão adicionar */}
-                <Button 
-                  onClick={handleAddToCart}
-                  className="rounded-full px-6 font-semibold"
-                  style={{ 
-                    backgroundColor: storeColors.primaria,
-                    borderColor: storeColors.primaria 
-                  }}
-                >
-                  Adicionar R$ {totalPrice.toFixed(2).replace('.', ',')}
-                </Button>
+              )}
+              
+              {/* Observações */}
+              <div>
+                <Label htmlFor="observations" className="text-sm font-semibold mb-2 block">
+                  Observações (opcional)
+                </Label>
+                <Textarea
+                  id="observations"
+                  placeholder="Alguma observação sobre o preparo? Ex: sem cebola, ponto da carne..."
+                  value={observations}
+                  onChange={(e) => setObservations(e.target.value)}
+                  className="min-h-[80px] resize-none"
+                  maxLength={500}
+                />
+                <p className="text-xs text-right text-gray-500 mt-1">{observations.length}/500</p>
               </div>
-            </div>
           </div>
+        </ScrollArea>
+        
+        {/* Footer com preço e controles */}
+        <div className="p-4 border-t bg-gray-50/50 mt-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          {/* Controle de quantidade */}
+          <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1 self-center">
+            <Button 
+              size="icon" 
+              variant="ghost"
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              className="h-8 w-8 rounded-full"
+              disabled={quantity <= 1}
+            >
+              <Minus className="w-4 h-4" />
+            </Button>
+            <span className="w-8 text-center font-semibold">{quantity}</span>
+            <Button 
+              size="icon" 
+              variant="ghost"
+              onClick={() => setQuantity(quantity + 1)}
+              className="h-8 w-8 rounded-full"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          {/* Botão adicionar */}
+          <Button 
+            onClick={handleAddToCart}
+            className="rounded-full px-6 font-semibold w-full sm:w-auto"
+            size="lg"
+            style={{ 
+              backgroundColor: storeColors.primaria,
+              borderColor: storeColors.primaria 
+            }}
+          >
+            Adicionar R$ {totalPrice.toFixed(2).replace('.', ',')}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -699,17 +687,16 @@ function ModernShoppingCart({
           whileTap={{ scale: 0.95 }}
         >
           <Button 
-            className="rounded-full w-16 h-16 shadow-2xl border-2 border-white"
+            className="rounded-full w-16 h-16 shadow-2xl"
             style={{ 
               backgroundColor: storeColors.primaria,
-              borderColor: 'white'
             }}
           >
             <ShoppingCart size={28} className="text-white" />
             <AnimatePresence>
               {state.items.length > 0 && (
                 <motion.span 
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg"
+                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold border-2 border-white"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
@@ -722,20 +709,21 @@ function ModernShoppingCart({
         </motion.div>
       </SheetTrigger>
       
-      <SheetContent className="w-full sm:max-w-lg p-0">
-        <div className="flex flex-col h-full">
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
           {/* Header */}
-          <div className="p-6 border-b bg-gray-50">
-            <SheetHeader>
-              <SheetTitle className="text-xl font-bold flex items-center gap-2">
+          <SheetHeader className="p-6 border-b bg-gray-50">
+            {/* CORREÇÃO DE FONTE */}
+            <SheetTitle 
+              className="text-xl font-bold flex items-center gap-2"
+              style={{ fontFamily: store.fonte_titulo }}
+            >
                <ShoppingCart className="w-5 h-5" />
                Seu Carrinho
              </SheetTitle>
-           </SheetHeader>
            <p className="text-sm text-gray-600 mt-1">
-             {state.items.length} {state.items.length === 1 ? 'item' : 'itens'}
+             {state.items.reduce((acc, item) => acc + item.quantidade, 0)} {state.items.reduce((acc, item) => acc + item.quantidade, 0) === 1 ? 'item' : 'itens'}
            </p>
-         </div>
+         </SheetHeader>
 
          {/* Conteúdo */}
          {state.items.length === 0 ? (
@@ -744,7 +732,7 @@ function ModernShoppingCart({
                <ShoppingCart className="w-12 h-12 text-gray-400" />
              </div>
              <h3 className="text-lg font-semibold text-gray-900 mb-2">Carrinho vazio</h3>
-             <p className="text-gray-500 mb-4">Adicione produtos deliciosos do cardápio!</p>
+             <p className="text-gray-500">Adicione produtos deliciosos do cardápio!</p>
            </div>
          ) : (
            <>
@@ -758,11 +746,10 @@ function ModernShoppingCart({
                        initial={{ opacity: 0, x: -20 }}
                        animate={{ opacity: 1, x: 0 }}
                        exit={{ opacity: 0, x: 20 }}
-                       transition={{ delay: index * 0.1 }}
-                       className="bg-white rounded-lg p-4 shadow-sm border"
+                       transition={{ delay: index * 0.05 }}
+                       className="bg-white rounded-lg p-3 shadow-sm border"
                      >
                        <div className="flex gap-3">
-                         {/* Imagem */}
                          {item.imagem_url && (
                            <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
                              <img 
@@ -773,61 +760,51 @@ function ModernShoppingCart({
                            </div>
                          )}
                          
-                         {/* Detalhes */}
                          <div className="flex-1 min-w-0">
                            <h4 className="font-semibold text-gray-900 mb-1 truncate">{item.nome}</h4>
                            <p className="text-sm text-gray-600 mb-2">
-                             R$ {item.preco.toFixed(2).replace('.', ',')} cada
+                             R$ {item.preco.toFixed(2).replace('.', ',')}
                            </p>
                            
-                           {/* Observações */}
                            {item.observacoes && (
-                             <div className="mb-2">
-                               <p className="text-xs text-gray-500">Observações:</p>
-                               <p className="text-xs text-gray-600 bg-gray-50 rounded p-2 mt-1">
-                                 {item.observacoes}
-                               </p>
+                             <div className="mb-2 text-xs text-gray-600 bg-gray-50 rounded p-2 mt-1">
+                               <span className="font-medium text-gray-500">Obs:</span> {item.observacoes}
                              </div>
                            )}
                            
-                           {/* Controles */}
-                           <div className="flex items-center justify-between">
+                           <div className="flex items-center justify-between mt-2">
                              <div className="flex items-center gap-2">
                                <Button 
                                  size="icon" 
                                  variant="outline"
                                  onClick={() => updateQuantity(item.id, item.quantidade - 1)}
-                                 className="h-8 w-8 rounded-full"
+                                 className="h-7 w-7 rounded-full"
                                >
                                  <Minus className="w-3 h-3" />
                                </Button>
-                               <span className="w-8 text-center font-semibold">{item.quantidade}</span>
+                               <span className="w-6 text-center font-semibold text-sm">{item.quantidade}</span>
                                <Button 
                                  size="icon" 
                                  variant="outline"
                                  onClick={() => updateQuantity(item.id, item.quantidade + 1)}
-                                 className="h-8 w-8 rounded-full"
+                                 className="h-7 w-7 rounded-full"
                                >
                                  <Plus className="w-3 h-3" />
                                </Button>
                              </div>
                              
-                             <div className="text-right">
-                               <p className="font-bold text-gray-900">
-                                 R$ {(item.preco * item.quantidade).toFixed(2).replace('.', ',')}
-                               </p>
-                               <Button 
-                                 size="sm" 
-                                 variant="ghost" 
-                                 onClick={() => removeItem(item.id)}
-                                 className="text-red-500 hover:text-red-700 p-0 h-auto"
-                               >
-                                 <Trash2 className="w-3 h-3 mr-1" />
-                                 Remover
-                               </Button>
-                             </div>
+                             <button
+                               onClick={() => removeItem(item.id)}
+                               className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+                             >
+                               <Trash2 className="w-3 h-3" />
+                               Remover
+                             </button>
                            </div>
                          </div>
+                       </div>
+                       <div className="text-right font-bold text-gray-900 mt-2 pt-2 border-t border-dashed">
+                         Subtotal: R$ {(item.preco * item.quantidade).toFixed(2).replace('.', ',')}
                        </div>
                      </motion.div>
                    ))}
@@ -836,18 +813,17 @@ function ModernShoppingCart({
              </ScrollArea>
              
              {/* Footer com resumo */}
-             <div className="p-4 border-t bg-gray-50">
-               {/* Resumo de valores */}
+             <div className="p-4 border-t bg-gray-50 mt-auto">
                <div className="space-y-2 mb-4">
                  <div className="flex justify-between text-sm">
-                   <span>Subtotal</span>
-                   <span>R$ {state.total.toFixed(2).replace('.', ',')}</span>
+                   <span className="text-gray-600">Subtotal</span>
+                   <span className="font-medium">R$ {state.total.toFixed(2).replace('.', ',')}</span>
                  </div>
                  
-                 {store.configuracoes?.taxa_entrega !== null && store.configuracoes?.taxa_entrega !== undefined && store.configuracoes.taxa_entrega > 0 && (
+                 {store.configuracoes?.taxa_entrega !== undefined && store.configuracoes.taxa_entrega !== null && store.configuracoes.taxa_entrega > 0 && (
                    <div className="flex justify-between text-sm">
-                     <span>Taxa de entrega</span>
-                     <span>R$ {store.configuracoes.taxa_entrega.toFixed(2).replace('.', ',')}</span>
+                     <span className="text-gray-600">Taxa de entrega</span>
+                     <span className="font-medium">R$ {store.configuracoes.taxa_entrega.toFixed(2).replace('.', ',')}</span>
                    </div>
                  )}
                  
@@ -861,32 +837,28 @@ function ModernShoppingCart({
                  </div>
                </div>
                
-               {/* Validação de pedido mínimo */}
-               {store.configuracoes?.valor_minimo_pedido && store.configuracoes.valor_minimo_pedido > state.total && (
+               {!canProceedToCheckout && store.configuracoes?.valor_minimo_pedido && (
                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                    <p className="text-sm text-yellow-800 flex items-center gap-2">
-                     <Info className="w-4 h-4" />
-                     Adicione mais R$ {(store.configuracoes.valor_minimo_pedido - state.total).toFixed(2).replace('.', ',')} para atingir o pedido mínimo
+                     <Info className="w-4 h-4 shrink-0" />
+                     Faltam R$ {(store.configuracoes.valor_minimo_pedido - state.total).toFixed(2).replace('.', ',')} para o pedido mínimo.
                    </p>
                  </div>
                )}
                
-               {/* Botão finalizar */}
                <Button 
                  onClick={onCheckout} 
-                 className="w-full rounded-full font-semibold py-3"
+                 className="w-full rounded-full font-semibold py-3 text-base"
                  style={{ 
                    backgroundColor: storeColors.primaria,
-                   borderColor: storeColors.primaria
                  }}
-                 disabled={!canProceedToCheckout}
+                 disabled={!canProceedToCheckout || !store.configuracoes.aceita_pedidos}
                >
-                 {canProceedToCheckout ? 'Finalizar Pedido' : 'Pedido Mínimo Não Atingido'}
+                { !store.configuracoes.aceita_pedidos ? 'Loja Fechada' : (canProceedToCheckout ? 'Finalizar Pedido' : 'Pedido Mínimo Não Atingido')}
                </Button>
              </div>
            </>
          )}
-       </div>
      </SheetContent>
    </Sheet>
  );
@@ -929,7 +901,7 @@ function CheckoutModal({
  // Dados do pedido
  const [orderData, setOrderData] = useState({
    metodo_pagamento: 'pix' as 'dinheiro' | 'cartao' | 'pix',
-   troco_para: 0,
+   troco_para: '' as string | number, // Alterado para string para lidar com input vazio
    tipo_entrega: 'entrega' as 'entrega' | 'retirada',
    observacoes: ''
  });
@@ -946,53 +918,47 @@ function CheckoutModal({
    setOrderData(prev => ({ ...prev, [field]: value }));
  };
 
-
-const cleanPayload = (obj: any) => {
-  const cleaned: any = {};
-  Object.keys(obj).forEach(key => {
-    if (obj[key] !== undefined && obj[key] !== '') {
-      if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
-        const cleanedNested = cleanPayload(obj[key]);
-        if (Object.keys(cleanedNested).length > 0) {
-          cleaned[key] = cleanedNested;
-        }
-      } else {
-        cleaned[key] = obj[key];
-      }
-    }
-  });
-  return cleaned;
-};
-
-const handleSubmitOrder = async () => {
+ const handleSubmitOrder = async () => {
   setIsLoading(true);
   
   try {
-    const orderPayload = cleanPayload({
-    customer: {
+    const customerPayload = {
       nome: customer.nome,
-      telefone: customer.telefone,
-      email: customer.email,
-      endereco_cep: customer.endereco_cep,
-      endereco_rua: customer.endereco_rua,
-      endereco_numero: customer.endereco_numero,
-      endereco_complemento: customer.endereco_complemento,
-      endereco_bairro: customer.endereco_bairro,
-      endereco_cidade: customer.endereco_cidade,
-      endereco_estado: customer.endereco_estado,
-      endereco_referencia: customer.endereco_referencia
-    },
-    items: state.items.map(item => ({
-      product_id: item.id,
-      quantidade: item.quantidade,
-      observacoes: item.observacoes
-    })),
-    metodo_pagamento: orderData.metodo_pagamento,
-    troco_para: orderData.metodo_pagamento === 'dinheiro' ? orderData.troco_para : null,
-    tipo_entrega: orderData.tipo_entrega,
-    observacoes: orderData.observacoes
-  });
+      telefone: customer.telefone.replace(/\D/g, ''),
+      email: customer.email || undefined,
+    };
 
+    if (orderData.tipo_entrega === 'entrega') {
+      Object.assign(customerPayload, {
+        endereco_cep: customer.endereco_cep.replace(/\D/g, '') || undefined,
+        endereco_rua: customer.endereco_rua,
+        endereco_numero: customer.endereco_numero,
+        endereco_complemento: customer.endereco_complemento || undefined,
+        endereco_bairro: customer.endereco_bairro,
+        endereco_cidade: customer.endereco_cidade || undefined,
+        endereco_estado: customer.endereco_estado || undefined,
+        endereco_referencia: customer.endereco_referencia || undefined,
+      });
+    }
+
+    const orderPayload: any = {
+      customer: customerPayload,
+      items: state.items.map(item => ({
+        product_id: item.id,
+        quantidade: item.quantidade,
+        observacoes: item.observacoes || undefined
+      })),
+      metodo_pagamento: orderData.metodo_pagamento,
+      tipo_entrega: orderData.tipo_entrega,
+      observacoes: orderData.observacoes || undefined
+    };
+    
+    if (orderData.metodo_pagamento === 'dinheiro') {
+      const trocoValue = parseFloat(String(orderData.troco_para));
+      if (!isNaN(trocoValue) && trocoValue > 0) {
+        orderPayload.troco_para = trocoValue;
+      }
+    }
 
     const response = await fetch(`https://api.fomi-eats.shop/api/v1/public/orders/${storeId}`, {
       method: 'POST',
@@ -1010,7 +976,6 @@ const handleSubmitOrder = async () => {
       setStep('success');
       dispatch({ type: 'CLEAR_CART' });
     } else {
-      // Mostrar erros específicos da validação
       if (data.errors) {
         const errorMessages = data.errors.map((error: any) => error.message || error).join(', ');
         throw new Error(errorMessages);
@@ -1025,24 +990,23 @@ const handleSubmitOrder = async () => {
     setIsLoading(false);
   }
 };
-
 const validateStep = () => {
   if (step === 'info') {
-    // Validações básicas obrigatórias
-    const nomeValid = customer.nome.length >= 2 && customer.nome.length <= 255;
-    const telefoneValid = customer.telefone.length >= 10; // Validação básica
+    const nomeValid = customer.nome.trim().length >= 2 && customer.nome.length <= 255;
+    const telefoneValid = customer.telefone.replace(/\D/g, '').length >= 10;
     
-    // Se for entrega, validar endereço
     if (orderData.tipo_entrega === 'entrega') {
-      const enderecoValid = customer.endereco_rua && customer.endereco_numero && customer.endereco_bairro;
-      return nomeValid && telefoneValid && enderecoValid;
+      const enderecoValid = customer.endereco_rua.trim() && customer.endereco_numero.trim() && customer.endereco_bairro.trim();
+      return nomeValid && telefoneValid && !!enderecoValid;
     }
     
     return nomeValid && telefoneValid;
   }
   return true;
 };
- const renderStep = () => {
+
+
+const renderStep = () => {
    switch (step) {
      case 'info':
        return (
@@ -1063,7 +1027,7 @@ const validateStep = () => {
                    placeholder="Seu nome completo"
                  />
                </div>
-               <div className="grid grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <div>
                    <Label htmlFor="telefone">Telefone *</Label>
                    <Input
@@ -1104,10 +1068,11 @@ const validateStep = () => {
              <RadioGroup 
                value={orderData.tipo_entrega} 
                onValueChange={(value) => handleOrderChange('tipo_entrega', value)}
+                className="space-y-2"
              >
-               <div className="flex items-center space-x-2 p-3 border rounded-lg">
+               <Label htmlFor="entrega" className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
                  <RadioGroupItem value="entrega" id="entrega" />
-                 <Label htmlFor="entrega" className="flex-1 cursor-pointer">
+                 <div className="flex-1">
                    <div className="flex items-center gap-2">
                      <MapPinIcon className="w-4 h-4" />
                      Entrega no endereço
@@ -1117,18 +1082,18 @@ const validateStep = () => {
                        </span>
                      )}
                    </div>
-                 </Label>
-               </div>
-               <div className="flex items-center space-x-2 p-3 border rounded-lg">
+                 </div>
+               </Label>
+               <Label htmlFor="retirada" className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
                  <RadioGroupItem value="retirada" id="retirada" />
-                 <Label htmlFor="retirada" className="flex-1 cursor-pointer">
+                 <div className="flex-1">
                    <div className="flex items-center gap-2">
                      <Store className="w-4 h-4" />
                      Retirar na loja
                      <span className="text-sm text-green-600">(Grátis)</span>
                    </div>
-                 </Label>
-               </div>
+                 </div>
+               </Label>
              </RadioGroup>
            </div>
 
@@ -1140,7 +1105,7 @@ const validateStep = () => {
                  Endereço de entrega
                </h3>
                <div className="space-y-4">
-                 <div className="grid grid-cols-3 gap-4">
+                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                    <div>
                      <Label htmlFor="cep">CEP</Label>
                      <Input
@@ -1154,9 +1119,10 @@ const validateStep = () => {
                         handleCustomerChange('endereco_cep', value);
                       }}
                        placeholder="00000-000"
+                       maxLength={9}
                      />
                    </div>
-                   <div className="col-span-2">
+                   <div className="sm:col-span-2">
                      <Label htmlFor="rua">Rua *</Label>
                      <Input
                        id="rua"
@@ -1166,7 +1132,7 @@ const validateStep = () => {
                      />
                    </div>
                  </div>
-                 <div className="grid grid-cols-3 gap-4">
+                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                    <div>
                      <Label htmlFor="numero">Número *</Label>
                      <Input
@@ -1176,7 +1142,7 @@ const validateStep = () => {
                        placeholder="123"
                      />
                    </div>
-                   <div className="col-span-2">
+                   <div className="sm:col-span-2">
                      <Label htmlFor="complemento">Complemento</Label>
                      <Input
                        id="complemento"
@@ -1186,7 +1152,7 @@ const validateStep = () => {
                      />
                    </div>
                  </div>
-                 <div className="grid grid-cols-2 gap-4">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                    <div>
                      <Label htmlFor="bairro">Bairro *</Label>
                      <Input
@@ -1228,10 +1194,11 @@ const validateStep = () => {
            <RadioGroup 
              value={orderData.metodo_pagamento} 
              onValueChange={(value) => handleOrderChange('metodo_pagamento', value)}
+             className="space-y-2"
            >
-             <div className="flex items-center space-x-2 p-4 border rounded-lg">
+             <Label htmlFor="pix" className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
                <RadioGroupItem value="pix" id="pix" />
-               <Label htmlFor="pix" className="flex-1 cursor-pointer">
+               <div className="flex-1">
                  <div className="flex items-center gap-3">
                    <Smartphone className="w-5 h-5 text-green-600" />
                    <div>
@@ -1239,12 +1206,12 @@ const validateStep = () => {
                      <div className="text-sm text-gray-500">Pagamento instantâneo</div>
                    </div>
                  </div>
-               </Label>
-             </div>
+               </div>
+             </Label>
              
-             <div className="flex items-center space-x-2 p-4 border rounded-lg">
+             <Label htmlFor="cartao" className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
                <RadioGroupItem value="cartao" id="cartao" />
-               <Label htmlFor="cartao" className="flex-1 cursor-pointer">
+               <div className="flex-1">
                  <div className="flex items-center gap-3">
                    <CreditCard className="w-5 h-5 text-blue-600" />
                    <div>
@@ -1252,12 +1219,12 @@ const validateStep = () => {
                      <div className="text-sm text-gray-500">Débito ou crédito</div>
                    </div>
                  </div>
-               </Label>
-             </div>
+               </div>
+             </Label>
              
-             <div className="flex items-center space-x-2 p-4 border rounded-lg">
+             <Label htmlFor="dinheiro" className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
                <RadioGroupItem value="dinheiro" id="dinheiro" />
-               <Label htmlFor="dinheiro" className="flex-1 cursor-pointer">
+               <div className="flex-1">
                  <div className="flex items-center gap-3">
                    <Banknote className="w-5 h-5 text-green-600" />
                    <div>
@@ -1265,8 +1232,8 @@ const validateStep = () => {
                      <div className="text-sm text-gray-500">Pagamento na entrega</div>
                    </div>
                  </div>
-               </Label>
-             </div>
+               </div>
+             </Label>
            </RadioGroup>
 
            {orderData.metodo_pagamento === 'dinheiro' && (
@@ -1275,12 +1242,17 @@ const validateStep = () => {
                <Input
                  id="troco"
                  type="number"
-                 min="0"
+                 min={total.toFixed(2)}
                  step="0.01"
                  value={orderData.troco_para}
-                 onChange={(e) => handleOrderChange('troco_para', parseFloat(e.target.value) || 0)}
-                 placeholder="0.00"
+                 onChange={(e) => handleOrderChange('troco_para', e.target.value)}
+                 placeholder="Ex: 50,00"
                />
+               {parseFloat(String(orderData.troco_para)) > 0 && parseFloat(String(orderData.troco_para)) > total && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Seu troco será de R$ {(parseFloat(String(orderData.troco_para)) - total).toFixed(2).replace('.', ',')}
+                </p>
+               )}
              </div>
            )}
 
@@ -1302,8 +1274,7 @@ const validateStep = () => {
          <div className="space-y-6">
            <h3 className="text-lg font-semibold mb-4">Confirme seu pedido</h3>
            
-           {/* Resumo do cliente */}
-           <Card className="p-4">
+           <Card className="p-4 bg-gray-50/50">
              <h4 className="font-semibold mb-3 flex items-center gap-2">
                <User className="w-4 h-4" />
                Dados do cliente
@@ -1315,29 +1286,27 @@ const validateStep = () => {
              </div>
            </Card>
 
-           {/* Resumo da entrega */}
-           <Card className="p-4">
+           <Card className="p-4 bg-gray-50/50">
              <h4 className="font-semibold mb-3 flex items-center gap-2">
                {orderData.tipo_entrega === 'entrega' ? <MapPinIcon className="w-4 h-4" /> : <Store className="w-4 h-4" />}
                {orderData.tipo_entrega === 'entrega' ? 'Endereço de entrega' : 'Retirada na loja'}
              </h4>
              {orderData.tipo_entrega === 'entrega' ? (
-               <div className="text-sm">
+               <div className="text-sm space-y-0.5">
                  <p>{customer.endereco_rua}, {customer.endereco_numero}</p>
                  {customer.endereco_complemento && <p>{customer.endereco_complemento}</p>}
                  <p>{customer.endereco_bairro}</p>
                  {customer.endereco_cidade && <p>{customer.endereco_cidade} - {customer.endereco_estado}</p>}
                </div>
              ) : (
-               <div className="text-sm">
+               <div className="text-sm space-y-0.5">
                  <p>{store.endereco_rua}, {store.endereco_numero}</p>
                  <p>{store.endereco_bairro} - {store.endereco_cidade}</p>
                </div>
              )}
            </Card>
 
-           {/* Resumo do pagamento */}
-           <Card className="p-4">
+           <Card className="p-4 bg-gray-50/50">
              <h4 className="font-semibold mb-3 flex items-center gap-2">
                <CreditCard className="w-4 h-4" />
                Pagamento
@@ -1349,18 +1318,17 @@ const validateStep = () => {
                  {orderData.metodo_pagamento === 'cartao' && 'Cartão na entrega'}
                  {orderData.metodo_pagamento === 'dinheiro' && 'Dinheiro'}
                </p>
-               {orderData.metodo_pagamento === 'dinheiro' && orderData.troco_para > 0 && (
-                 <p><strong>Troco para:</strong> R$ {orderData.troco_para.toFixed(2).replace('.', ',')}</p>
+               {orderData.metodo_pagamento === 'dinheiro' && parseFloat(String(orderData.troco_para)) > 0 && (
+                 <p><strong>Troco para:</strong> R$ {parseFloat(String(orderData.troco_para)).toFixed(2).replace('.', ',')}</p>
                )}
              </div>
            </Card>
 
-           {/* Resumo financeiro */}
            <Card className="p-4">
              <h4 className="font-semibold mb-3">Resumo do pedido</h4>
              <div className="space-y-2 text-sm">
                <div className="flex justify-between">
-                 <span>Subtotal ({state.items.length} itens)</span>
+                 <span>Subtotal ({state.items.length} {state.items.length === 1 ? 'item' : 'itens'})</span>
                  <span>R$ {subtotal.toFixed(2).replace('.', ',')}</span>
                </div>
                {taxaEntrega > 0 && (
@@ -1379,7 +1347,7 @@ const validateStep = () => {
 
            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
              <p className="text-sm text-yellow-800 flex items-start gap-2">
-               <Info className="w-4 h-4 mt-0.5" />
+               <Info className="w-4 h-4 mt-0.5 shrink-0" />
                <span>
                  Tempo estimado de {orderData.tipo_entrega === 'entrega' ? 'entrega' : 'preparo'}:{' '}
                  <strong>{store.configuracoes.tempo_preparo_min} minutos</strong>
@@ -1391,11 +1359,11 @@ const validateStep = () => {
 
      case 'success':
        return (
-         <div className="text-center space-y-6">
+         <div className="text-center space-y-6 py-8">
            <motion.div
              initial={{ scale: 0 }}
              animate={{ scale: 1 }}
-             transition={{ type: "spring", duration: 0.6 }}
+             transition={{ type: "spring", stiffness: 260, damping: 20 }}
            >
              <div 
                className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -1408,7 +1376,7 @@ const validateStep = () => {
            <div>
              <h3 className="text-2xl font-bold text-gray-900 mb-2">Pedido confirmado!</h3>
              <p className="text-gray-600 mb-4">
-               Seu pedido foi recebido e está sendo preparado
+               Seu pedido foi recebido e já está sendo preparado.
              </p>
              
              <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -1433,11 +1401,11 @@ const validateStep = () => {
              </div>
            </div>
            
-           <div className="flex gap-3">
+           <div className="flex flex-col sm:flex-row gap-3">
              <Button 
                variant="outline" 
                onClick={() => {
-                 navigator.clipboard.writeText(orderNumber);
+                 navigator.clipboard.writeText(`#${orderNumber}`);
                  alert('Número do pedido copiado!');
                }}
                className="flex-1"
@@ -1456,7 +1424,7 @@ const validateStep = () => {
                  style={{ backgroundColor: storeColors.primaria }}
                >
                  <MessageCircle className="w-4 h-4 mr-2" />
-                 WhatsApp
+                 Chamar no WhatsApp
                </Button>
              )}
            </div>
@@ -1468,126 +1436,126 @@ const validateStep = () => {
    }
  };
 
- const getStepTitle = () => {
+const getStepTitle = () => {
    switch (step) {
      case 'info': return 'Informações de entrega';
      case 'payment': return 'Pagamento';
      case 'confirm': return 'Confirmação';
-     case 'success': return 'Pedido confirmado';
+     case 'success': return 'Pedido confirmado!';
      default: return '';
    }
  };
 
  return (
-   <Dialog open={isOpen} onOpenChange={onClose}>
-     <DialogContent className="max-w-2xl max-h-[90vh] p-0">
-       <div className="flex flex-col h-full">
-         {/* Header */}
-         <div className="p-6 border-b">
-           <div className="flex items-center justify-between">
-             <div className="flex items-center gap-3">
-               {step !== 'success' && step !== 'info' && (
-                 <Button 
-                   variant="ghost" 
-                   size="icon"
-                   onClick={() => {
-                     if (step === 'payment') setStep('info');
-                     if (step === 'confirm') setStep('payment');
-                   }}
-                 >
-                   <ArrowLeft className="w-4 h-4" />
-                 </Button>
-               )}
-               <div>
-                 <DialogTitle className="text-xl font-bold">{getStepTitle()}</DialogTitle>
-                 {step !== 'success' && (
-                   <p className="text-sm text-gray-500">
-                     Passo {step === 'info' ? '1' : step === 'payment' ? '2' : '3'} de 3
-                   </p>
-                 )}
-               </div>
-             </div>
-             
-             {step !== 'success' && (
-               <Button variant="ghost" size="icon" onClick={onClose}>
-                 <X className="w-4 h-4" />
+   <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+     {/* CORREÇÃO DE RESPONSIVIDADE */}
+     <DialogContent className="w-[95vw] max-w-2xl rounded-lg max-h-[90svh] p-0 flex flex-col">
+       {/* Header */}
+       <div className="p-4 sm:p-6 border-b">
+         <div className="flex items-center justify-between">
+           <div className="flex items-center gap-3">
+             {step !== 'success' && step !== 'info' && (
+               <Button 
+                 variant="ghost" 
+                 size="icon"
+                 className="h-8 w-8"
+                 onClick={() => {
+                   if (step === 'payment') setStep('info');
+                   if (step === 'confirm') setStep('payment');
+                 }}
+               >
+                 <ArrowLeft className="w-4 h-4" />
                </Button>
              )}
+             <div>
+               <DialogTitle className="text-lg sm:text-xl font-bold" style={{ fontFamily: store.fonte_titulo }}>
+                 {getStepTitle()}
+               </DialogTitle>
+               {step !== 'success' && (
+                 <p className="text-sm text-gray-500">
+                   Passo {step === 'info' ? '1' : step === 'payment' ? '2' : '3'} de 3
+                 </p>
+               )}
+             </div>
            </div>
            
-           {/* Progress bar */}
            {step !== 'success' && (
-             <div className="flex mt-4 gap-2">
-               {['info', 'payment', 'confirm'].map((stepName, index) => (
-                 <div 
-                   key={stepName}
-                   className="h-1 flex-1 rounded-full transition-colors"
-                   style={{ 
-                     backgroundColor: 
-                       (step === 'info' && index === 0) ||
-                       (step === 'payment' && index <= 1) ||
-                       (step === 'confirm' && index <= 2)
-                         ? storeColors.primaria 
-                         : '#e5e7eb'
-                   }}
-                 />
-               ))}
-             </div>
+             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
+               <X className="w-4 h-4" />
+             </Button>
            )}
          </div>
-
-         {/* Content */}
-         <ScrollArea className="flex-1 p-6">
-           {renderStep()}
-         </ScrollArea>
-
-         {/* Footer */}
+         
          {step !== 'success' && (
-           <div className="p-6 border-t bg-gray-50">
-             <div className="flex items-center justify-between">
-               {/* Resumo do valor (exceto no primeiro step) */}
-               {step !== 'info' && (
-                 <div className="text-left">
-                   <p className="text-sm text-gray-600">Total do pedido</p>
-                   <p className="text-xl font-bold" style={{ color: storeColors.primaria }}>
-                     R$ {total.toFixed(2).replace('.', ',')}
-                   </p>
-                 </div>
-               )}
-               
-               <div className="flex gap-3 ml-auto">
-                 <Button 
-                   onClick={() => {
-                     if (step === 'info') setStep('payment');
-                     else if (step === 'payment') setStep('confirm');
-                     else if (step === 'confirm') handleSubmitOrder();
-                   }}
-                   disabled={!validateStep() || isLoading}
-                   className="px-8"
-                   style={{ 
-                     backgroundColor: storeColors.primaria,
-                     borderColor: storeColors.primaria 
-                   }}
-                 >
-                   {isLoading ? (
-                     <>
-                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                       Processando...
-                     </>
-                   ) : (
-                     <>
-                       {step === 'info' && 'Continuar'}
-                       {step === 'payment' && 'Revisar pedido'}
-                       {step === 'confirm' && 'Finalizar pedido'}
-                       <ArrowRight className="w-4 h-4 ml-2" />
-                     </>
-                   )}
-                 </Button>
-               </div>
-             </div>
+           <div className="flex mt-4 gap-2">
+             {['info', 'payment', 'confirm'].map((stepName, index) => (
+               <div 
+                 key={stepName}
+                 className="h-1 flex-1 rounded-full transition-colors"
+                 style={{ 
+                   backgroundColor: 
+                     (step === 'info' && index === 0) ||
+                     (step === 'payment' && index <= 1) ||
+                     (step === 'confirm' && index <= 2)
+                       ? storeColors.primaria 
+                       : '#e5e7eb'
+                 }}
+               />
+             ))}
            </div>
          )}
        </div>
+
+       {/* Content */}
+        <ScrollArea className="flex-1 overflow-y-auto">
+         <div className="p-4 sm:p-6">
+           {renderStep()}
+         </div>
+       </ScrollArea>
+
+       {/* Footer */}
+       {step !== 'success' && (
+         <div className="p-4 sm:p-6 border-t bg-gray-50 mt-auto">
+           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+             {step !== 'info' ? (
+               <div className="text-left">
+                 <p className="text-sm text-gray-600">Total do pedido</p>
+                 <p className="text-xl font-bold" style={{ color: storeColors.primaria }}>
+                   R$ {total.toFixed(2).replace('.', ',')}
+                 </p>
+               </div>
+             ) : <div />} 
+             
+             <Button 
+               onClick={() => {
+                 if (step === 'info') setStep('payment');
+                 else if (step === 'payment') setStep('confirm');
+                 else if (step === 'confirm') handleSubmitOrder();
+               }}
+               disabled={!validateStep() || isLoading}
+               className="w-full sm:w-auto px-8 py-3"
+               style={{ 
+                 backgroundColor: storeColors.primaria,
+                 borderColor: storeColors.primaria 
+               }}
+             >
+               {isLoading ? (
+                 <>
+                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                   Processando...
+                 </>
+               ) : (
+                 <span className="flex items-center justify-center">
+                   {step === 'info' && 'Continuar'}
+                   {step === 'payment' && 'Revisar pedido'}
+                   {step === 'confirm' && 'Finalizar pedido'}
+                   <ArrowRight className="w-4 h-4 ml-2" />
+                 </span>
+               )}
+             </Button>
+           </div>
+         </div>
+       )}
      </DialogContent>
    </Dialog>
  );
@@ -1849,13 +1817,14 @@ function StoreLayout({ store, initialCategories, initialProducts = [] }: PublicS
      </main>
 
      {/* Modais e componentes flutuantes */}
-     <ProductModal
-       product={selectedProduct}
-       isOpen={isProductModalOpen}
-       onClose={() => setIsProductModalOpen(false)}
-       onAddToCart={handleAddToCartFromModal}
-       storeColors={storeColors}
-     />
+    <ProductModal
+      product={selectedProduct}
+      isOpen={isProductModalOpen}
+      onClose={() => setIsProductModalOpen(false)}
+      onAddToCart={handleAddToCartFromModal}
+      storeColors={storeColors}
+      store={store}
+  />
 
      <ModernShoppingCart 
        onCheckout={() => setIsCheckoutModalOpen(true)}
@@ -1972,12 +1941,6 @@ function StoreLayout({ store, initialCategories, initialProducts = [] }: PublicS
 }
 
 export default function PublicStoreClient(props: PublicStoreClientProps) {
- console.log('=== PUBLIC STORE CLIENT START ===');
- console.log('PublicStoreClient renderizado com store:', props.store.id);
- console.log('Store completa:', props.store);
- console.log('Categories recebidas:', props.initialCategories.length);
- console.log('Products recebidos:', props.initialProducts?.length || 0);
- console.log('================================');
  
  return (
    <CartProvider>

@@ -17,7 +17,8 @@ export function useSSE(storeId?: string, token?: string) {
   useEffect(() => {
     if (!storeId || !token) return;
 
-    const url = `/api/v1/sse/connect/${storeId}?token=${token}`;
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = `https://api.fomi-eats.shop/api/v1/sse/connect/${storeId}?token=${token}`;
     eventSourceRef.current = new EventSource(url);
 
     eventSourceRef.current.onmessage = (event) => {
