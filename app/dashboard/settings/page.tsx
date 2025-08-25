@@ -1,16 +1,25 @@
 "use client"
 
-import { SidebarMenu } from "@/components/sidebar-menu"
-import { BillingManagement } from "@/components/billing-management"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { User, Bell, Shield, CreditCard } from "lucide-react"
+import { SidebarMenu } from "@/components/sidebar-menu";
+import { BillingManagement } from "@/components/billing-management";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { User, Bell, CreditCard, Info } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function SettingsPage() {
+  const { user, isLoading } = useAuth();
+
+  const getInitials = (name: string = '') => {
+    if (!name) return '';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <SidebarMenu />
@@ -29,7 +38,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Button className="bg-primary hover:bg-primary/90">Salvar Alterações</Button>
+              <Button disabled title="Funcionalidade em desenvolvimento" className="bg-primary hover:bg-primary/90">Salvar Alterações</Button>
             </div>
           </div>
         </motion.header>
@@ -48,41 +57,62 @@ export default function SettingsPage() {
                 <h2 className="text-xl font-semibold">Perfil do Usuário</h2>
               </div>
 
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-2xl">JS</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">João Silva</h3>
-                  <p className="text-gray-600">Proprietário</p>
-                  <Button variant="outline" size="sm" className="mt-2 bg-transparent">
-                    Alterar Foto
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="firstName">Nome</Label>
-                    <Input id="firstName" defaultValue="João" className="mt-1" />
+              {isLoading ? (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <Skeleton className="h-20 w-20 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[250px]" />
+                      <Skeleton className="h-4 w-[200px]" />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="lastName">Sobrenome</Label>
-                    <Input id="lastName" defaultValue="Silva" className="mt-1" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : user ? (
+                <>
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-2xl">{getInitials(user.nome)}</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{user.nome}</h3>
+                      <p className="text-gray-600">{user.email}</p>
+                      <Button variant="outline" size="sm" className="mt-2 bg-transparent" disabled title="Funcionalidade em desenvolvimento">
+                        Alterar Foto
+                      </Button>
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" defaultValue="joao@email.com" className="mt-1" />
-                </div>
+                  <div className="space-y-4">
+                    <div>
+                        <Label htmlFor="fullName">Nome Completo</Label>
+                        <Input id="fullName" value={user.nome} className="mt-1" disabled />
+                    </div>
 
-                <div>
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input id="phone" defaultValue="(11) 99999-9999" className="mt-1" />
-                </div>
-              </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" value={user.email} className="mt-1" disabled />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="cpf">CPF</Label>
+                      <Input id="cpf" value={user.cpf} className="mt-1" disabled />
+                    </div>
+                    
+                    <Alert>
+                      <Info className="h-4 w-4" />
+                      <AlertTitle>Edição de Perfil</AlertTitle>
+                      <AlertDescription>
+                        A funcionalidade para editar os dados do perfil será implementada em breve.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                </>
+              ) : (
+                 <p className="text-red-500">Não foi possível carregar os dados do usuário.</p>
+              )}
             </motion.div>
 
             {/* Notificações */}
@@ -110,52 +140,9 @@ export default function SettingsPage() {
                       <p className="font-medium text-gray-900">{notification.label}</p>
                       <p className="text-sm text-gray-600">{notification.description}</p>
                     </div>
-                    <Switch checked={notification.enabled} />
+                    <Switch defaultChecked={notification.enabled} />
                   </div>
                 ))}
-              </div>
-            </motion.div>
-
-            {/* Segurança */}
-            <motion.div
-              className="bg-white rounded-xl border border-gray-200 p-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <div className="flex items-center space-x-2 mb-6">
-                <Shield size={24} className="text-primary" />
-                <h2 className="text-xl font-semibold">Segurança</h2>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="currentPassword">Senha Atual</Label>
-                  <Input id="currentPassword" type="password" className="mt-1" />
-                </div>
-
-                <div>
-                  <Label htmlFor="newPassword">Nova Senha</Label>
-                  <Input id="newPassword" type="password" className="mt-1" />
-                </div>
-
-                <div>
-                  <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-                  <Input id="confirmPassword" type="password" className="mt-1" />
-                </div>
-
-                <Button className="w-full">Alterar Senha</Button>
-
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-900">Autenticação de dois fatores</span>
-                    <Badge className="bg-red-100 text-red-800">Desativado</Badge>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-3">Adicione uma camada extra de segurança à sua conta</p>
-                  <Button variant="outline" size="sm">
-                    Ativar 2FA
-                  </Button>
-                </div>
               </div>
             </motion.div>
 

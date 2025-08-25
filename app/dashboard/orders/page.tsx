@@ -207,7 +207,7 @@ export default function OrdersPage() {
                       • {statistics.total_pedidos || 0} pedidos • {statistics.total_vendas ? formatCurrency(statistics.total_vendas) : 'R$ 0,00'} em vendas
                     </span>
                   )}
-                  <span className={`ml-4 text-xs font-semibold ${isConnected ? 'text-green-600' : 'text-red-500'}`}>SSE: {isConnected ? 'Conectado' : 'Desconectado'}</span>
+                  <span className={`ml-4 text-xs font-semibold ${isConnected ? 'text-green-600' : 'text-red-500'}`}>Pedidos ao vivo: {isConnected ? 'Conectado' : 'Desconectado'}</span>
                 </p>
               </div>
 

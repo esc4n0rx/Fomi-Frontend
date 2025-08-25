@@ -14,25 +14,21 @@ const recursos = [
     icon: Zap,
     title: "Setup Rápido",
     description: "Sua loja online pronta para vender em menos de 5 minutos, sem complicações técnicas.",
-    color: "from-yellow-400 to-orange-500",
   },
   {
     icon: Smartphone,
     title: "Mobile First",
     description: "Experiência otimizada para pedidos pelo celular, garantindo mais conversão.",
-    color: "from-green-400 to-blue-500",
   },
   {
     icon: BarChart3,
     title: "Analytics Completo",
     description: "Acompanhe vendas, clientes e produtos com relatórios detalhados e fáceis de entender.",
-    color: "from-purple-500 to-indigo-500",
   },
   {
     icon: Shield,
     title: "Pagamentos Seguros",
     description: "Integração com os principais gateways do Brasil, com máxima segurança para você e seus clientes.",
-    color: "from-pink-500 to-red-500",
   },
 ]
 
@@ -104,20 +100,22 @@ export default function RecursosPage() {
             {recursos.map((feature, index) => (
               <motion.div
                 key={feature.title}
-                className={`group text-center p-8 rounded-2xl shadow-xl border border-gray-100 bg-gradient-to-br ${feature.color} text-white relative overflow-hidden cursor-pointer transition-transform duration-300 hover:-translate-y-2 hover:scale-105`}
-                initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.7, delay: index * 0.12 }}
+                className="group relative text-center p-8 rounded-2xl bg-white shadow-lg hover:shadow-primary/20 transition-all duration-300 overflow-hidden border border-gray-100"
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                whileHover={{ scale: 1.04 }}
-                style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.10)' }}
+                whileHover={{ y: -5 }}
               >
-                <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center relative">
-                  <div className="absolute inset-0 rounded-full bg-white/20 blur-lg opacity-70 animate-pulse" />
-                  <feature.icon size={38} className="text-white drop-shadow-lg z-10 group-hover:scale-110 transition-transform duration-200" />
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center rounded-full bg-primary/10 text-primary transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/20">
+                    <feature.icon size={32} />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2 text-gray-800">{feature.title}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
                 </div>
-                <h3 className="text-2xl font-bold mb-2 drop-shadow-sm group-hover:underline underline-offset-4">{feature.title}</h3>
-                <p className="text-white/90 text-base font-medium drop-shadow-sm">{feature.description}</p>
               </motion.div>
             ))}
           </div>

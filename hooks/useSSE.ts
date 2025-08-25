@@ -21,12 +21,13 @@ export function useSSE(storeId?: string, token?: string) {
     const url = `https://api.fomi-eats.shop/api/v1/sse/connect/${storeId}?token=${token}`;
     eventSourceRef.current = new EventSource(url);
 
+    eventSourceRef.current.onopen = () => {
+      setIsConnected(true);
+    };
+
     eventSourceRef.current.onmessage = (event) => {
       try {
         const data: SSEEvent = JSON.parse(event.data);
-        if (data.type === 'connection_established') {
-          setIsConnected(true);
-        }
         setEvents((prev) => [...prev.slice(-49), data]); // Mantém últimos 50 eventos
       } catch (e) {
         // Ignora eventos malformados
